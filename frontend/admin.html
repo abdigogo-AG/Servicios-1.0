@@ -53,7 +53,7 @@
     <script>
         async function cargarUsuarios() {
             try {
-                const res = await fetch("http://localhost:8080/admin/usuarios");
+                const res = await fetch("https://servicios-1-0.onrender.com/admin/usuarios");
                 const usuarios = await res.json();
                 
                 const tbody = document.getElementById('tabla-usuarios');
@@ -109,7 +109,7 @@
             if (tipo === 'borrar' && !confirm("¿Seguro que quieres borrar a este usuario?")) return;
 
             try {
-                const res = await fetch("http://localhost:8080/admin/accion", {
+                const res = await fetch("https://servicios-1-0.onrender.com/admin/accion", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ usuario_id: id, accion: tipo, dias_bloqueo: dias })

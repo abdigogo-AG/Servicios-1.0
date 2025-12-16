@@ -58,7 +58,7 @@
             };
 
             try {
-                const respuesta = await fetch("http://localhost:8080/verificar-cuenta", {
+                const respuesta = await fetch("https://servicios-1-0.onrender.com/verificar-cuenta", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(datos)

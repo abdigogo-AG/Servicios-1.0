@@ -220,7 +220,7 @@
         async function cargarCategorias() {
             const contenedor = document.getElementById('lista-oficios');
             try {
-                const res = await fetch("http://localhost:8080/categorias");
+                const res = await fetch("https://servicios-1-0.onrender.com/categorias");
                 const categorias = await res.json();
                 contenedor.innerHTML = ""; 
                 categorias.forEach(cat => {
@@ -424,7 +424,7 @@
             let url = "", payload = {};
             
             if (rol === 'cliente') {
-                url = "http://localhost:8080/registro-cliente";
+                url = "https://servicios-1-0.onrender.com/registro-cliente";
                 payload = { ...base, 
                     calle: document.getElementById('calle').value,
                     colonia: document.getElementById('colonia').value,
@@ -435,7 +435,7 @@
                     referencias: document.getElementById('referencias_domicilio').value || null
                 };
             } else {
-                url = "http://localhost:8080/registro-trabajador";
+                url = "https://servicios-1-0.onrender.com/registro-trabajador";
                 payload = { ...base,
                     descripcion_bio: document.getElementById('descripcion_bio').value,
                     anios_experiencia: document.getElementById('anios_experiencia').value,

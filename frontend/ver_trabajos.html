@@ -128,7 +128,7 @@
             const contenedor = document.getElementById('lista-trabajos');
             
             try {
-                const res = await fetch("http://localhost:8080/feed-servicios");
+                const res = await fetch("https://servicios-1-0.onrender.com/feed-servicios");
                 
                 if(!res.ok) throw new Error("Error al conectar con servidor");
                 
@@ -231,7 +231,7 @@
                         mensaje: formValues.mensaje
                     };
 
-                    const res = await fetch("http://localhost:8080/propuestas", {
+                    const res = await fetch("https://servicios-1-0.onrender.com/propuestas", {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
                         body: JSON.stringify(datos)

@@ -233,7 +233,7 @@
         // --- 1. CARGAR DATOS DEL PERFIL ---
         async function cargarPerfil() {
             try {
-                const res = await fetch(`http://localhost:8080/mi-perfil-cliente/${uid}`);
+                const res = await fetch(`https://servicios-1-0.onrender.com/mi-perfil-cliente/${uid}`);
                 if (!res.ok) throw new Error("Error al cargar");
                 const data = await res.json();
 
@@ -312,7 +312,7 @@
             };
 
             try {
-                const res = await fetch(`http://localhost:8080/mi-perfil-cliente/${uid}`, {
+                const res = await fetch(`https://servicios-1-0.onrender.com/mi-perfil-cliente/${uid}`, {
                     method: "PUT",
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify(datos)
@@ -325,7 +325,7 @@
         // --- 4. CARGAR SERVICIOS Y PROPUESTAS ---
         async function cargarServicios() {
             try {
-                const res = await fetch(`http://localhost:8080/servicios/${uid}`);
+                const res = await fetch(`https://servicios-1-0.onrender.com/servicios/${uid}`);
                 const servicios = await res.json();
                 const container = document.getElementById('lista-servicios');
                 container.innerHTML = "";
@@ -373,7 +373,7 @@
             box.innerHTML = "Cargando...";
 
             try {
-                const res = await fetch(`http://localhost:8080/servicios/${idServicio}/propuestas`);
+                const res = await fetch(`https://servicios-1-0.onrender.com/servicios/${idServicio}/propuestas`);
                 const props = await res.json();
                 box.innerHTML = "";
 
@@ -413,7 +413,7 @@
 
             if (confirm.isConfirmed) {
                 try {
-                    const res = await fetch(`http://localhost:8080/servicios/contratar`, {
+                    const res = await fetch(`https://servicios-1-0.onrender.com/servicios/contratar`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ servicio_id: servicioId, trabajador_id: trabajadorId, propuesta_id: propuestaId })
@@ -434,7 +434,7 @@
             const formData = new FormData();
             formData.append("file", file);
             try {
-                const res = await fetch("http://localhost:8080/upload", { method: "POST", body: formData });
+                const res = await fetch("https://servicios-1-0.onrender.com/upload", { method: "POST", body: formData });
                 const data = await res.json();
                 document.getElementById('url-foto-perfil').value = data.url;
                 document.getElementById('sidebar-foto').src = data.url;
