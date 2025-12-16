@@ -1,0 +1,186 @@
+:root {
+    --color-principal: #0b69ff;
+    --color-hover: #0056d6;
+    --texto-oscuro: #1a1a1a;
+    --texto-claro: #666;
+    --blanco: #ffffff;
+    --gris-fondo: #f9f9f9;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+
+body { background-color: var(--blanco); color: var(--texto-oscuro); }
+
+/* --- HEADER --- */
+header {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 20px 5%; background: var(--blanco); box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    position: sticky; top: 0; z-index: 100;
+}
+
+.logo { font-size: 24px; font-weight: bold; color: var(--color-principal); display: flex; align-items: center; gap: 10px; }
+.nav-buttons a { text-decoration: none; font-weight: 600; margin-left: 20px; transition: 0.3s; }
+.btn-login { color: var(--texto-oscuro); }
+.btn-login:hover { color: var(--color-principal); }
+.btn-registro { 
+    background-color: var(--color-principal); color: var(--blanco); 
+    padding: 10px 20px; border-radius: 25px; 
+}
+.btn-registro:hover { background-color: var(--color-hover); box-shadow: 0 4px 10px rgba(11, 105, 255, 0.3); }
+
+/* --- HERO (PORTADA) --- */
+.hero {
+    text-align: center; padding: 80px 20px;
+    background: linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%);
+}
+.hero h1 { font-size: 48px; margin-bottom: 20px; line-height: 1.2; }
+.hero span { color: var(--color-principal); }
+.hero p { font-size: 18px; color: var(--texto-claro); max-width: 600px; margin: 0 auto 40px; }
+
+.hero-buttons { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+.btn-grande {
+    padding: 15px 30px; font-size: 18px; border-radius: 8px; text-decoration: none; font-weight: bold; transition: transform 0.2s;
+    display: flex; align-items: center; gap: 10px;
+}
+.btn-grande:hover { transform: translateY(-3px); }
+.btn-cliente { background-color: var(--color-principal); color: var(--blanco); }
+.btn-trabajador { background-color: var(--texto-oscuro); color: var(--blanco); }
+
+/* --- SERVICIOS --- */
+.servicios { padding: 60px 5%; background-color: var(--blanco); text-align: center; }
+.section-title { font-size: 32px; margin-bottom: 40px; }
+.grid-servicios {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 30px; max-width: 1000px; margin: 0 auto;
+}
+.card-servicio {
+    padding: 20px; border-radius: 15px; background: var(--gris-fondo); transition: 0.3s;
+    display: flex; flex-direction: column; align-items: center; gap: 15px;
+}
+.card-servicio:hover { background: var(--blanco); box-shadow: 0 10px 20px rgba(0,0,0,0.1); transform: translateY(-5px); }
+.icon-box {
+    width: 60px; height: 60px; background: #e6f0ff; color: var(--color-principal);
+    border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 24px;
+}
+
+/* --- CÓMO FUNCIONA --- */
+.pasos { padding: 60px 5%; background-color: #f8f9fa; text-align: center; }
+.grid-pasos { display: flex; justify-content: center; gap: 50px; flex-wrap: wrap; margin-top: 40px; }
+.paso { max-width: 250px; }
+.paso-numero {
+    font-size: 40px; font-weight: bold; color: #e1e4e8; margin-bottom: 10px;
+}
+.paso h3 { margin-bottom: 10px; }
+
+/* --- FOOTER --- */
+footer { background: #1a1a1a; color: white; text-align: center; padding: 40px 20px; margin-top: auto; }
+.footer-links a { color: #ccc; text-decoration: none; margin: 0 10px; }
+.footer-links a:hover { color: white; }
+
+/* RESPONSIVO */
+@media (max-width: 768px) {
+    .hero h1 { font-size: 36px; }
+    .grid-pasos { flex-direction: column; align-items: center; }
+}
+
+/* Estilo para el botón flotante (el signo de interrogación) */
+#floating-button {
+    position: fixed; /* Lo fija en la ventana, no en el contenido */
+    bottom: 20px;
+    right: 20px;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%; /* Lo hace circular */
+    background-color: #007bff;
+    color: white;
+    font-size: 24px;
+    font-weight: bold;
+    border: none;
+    cursor: pointer;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    z-index: 1000; /* Asegura que esté por encima de otros elementos */
+}
+
+/* Contenedor principal de la ventana del chatbot */
+#chat-window {
+    position: fixed;
+    bottom: 80px; /* Separado del botón */
+    right: 20px;
+    width: 350px; /* Ancho similar al de tu imagen */
+    height: 450px;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 12px;
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.25);
+    display: none; /* OCULTO por defecto */
+    flex-direction: column;
+    overflow: hidden;
+    z-index: 999;
+}
+
+/* Header (Encabezado) */
+#chat-header {
+    padding: 15px;
+    border-bottom: 1px solid #eee;
+    font-weight: bold;
+    font-size: 16px;
+    background-color: #f7f7f7;
+}
+
+/* Área de Mensajes */
+#chat-messages {
+    flex-grow: 1;
+    padding: 10px;
+    overflow-y: auto; /* Permite scroll vertical */
+    display: flex;
+    flex-direction: column;
+}
+
+/* Estilo para cada mensaje */
+.message {
+    margin-bottom: 10px;
+    padding: 8px 12px;
+    border-radius: 15px;
+    max-width: 80%;
+    line-height: 1.4;
+}
+.user-message {
+    align-self: flex-end; /* A la derecha */
+    background-color: #007bff;
+    color: white;
+    border-bottom-right-radius: 3px;
+}
+.ai-message {
+    align-self: flex-start; /* A la izquierda */
+    background-color: #f0f0f0;
+    color: #333;
+    border-bottom-left-radius: 3px;
+}
+.ai-message p {
+    margin: 0;
+    /* Para que los saltos de línea se respeten y se vea bien */
+    white-space: pre-wrap; 
+}
+
+/* Área de Input (Donde se escribe) */
+#chat-input-area {
+    display: flex;
+    padding: 10px;
+    border-top: 1px solid #eee;
+    background-color: white;
+}
+#user-input {
+    flex-grow: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 20px;
+    margin-right: 10px;
+}
+#send-button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 20px;
+    padding: 0 15px;
+    cursor: pointer;
+    font-weight: bold;
+}

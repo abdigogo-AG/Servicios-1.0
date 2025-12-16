@@ -1,0 +1,66 @@
+# version: '3.8'
+
+services:
+  
+  # --- Base de Datos (Postgres) ---
+  db_postgres:
+    image: postgres:15-alpine
+    restart: always
+    environment:
+      # Lee las credenciales del archivo .env
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres_scripts/init.sql:/docker-entrypoint-initdb.d/init.sql
+    ports:
+      - "5432:5432"
+    networks:
+      - services_net
+
+
+  # --- API Backend (Python) ---
+  api:
+    build:
+      context: . 
+      dockerfile: Dockerfile
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      # Construye la URL de conexión usando las variables del .env
+      POSTGRES_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db_postgres:5432/${POSTGRES_DB}"
+      
+      # URL del Frontend (Local o Nube)
+      FRONTEND_URL: "http://localhost:8080"
+      
+      # --- STRIPE KEYS (Invisibles) ---
+      # Docker las leerá automáticamente de tu archivo .env
+      STRIPE_SECRET_KEY: ${STRIPE_SECRET_KEY}
+      STRIPE_PUBLISHABLE_KEY: ${STRIPE_PUBLISHABLE_KEY}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET}
+      
+      # Google API
+      GOOGLE_API_KEY: ${GOOGLE_API_KEY}
+
+    volumes:
+      # Mapea la carpeta 'uploads' para persistencia de imágenes
+      - ./uploads:/app/uploads
+      # Mapea el frontend para servir archivos estáticos (si es necesario)
+      - ./frontend:/app/frontend
+    
+    # Comando especial para que no se reinicie al subir fotos
+    command: uvicorn main:app --host 0.0.0.0 --port 8080 --reload --reload-dir /app --reload-exclude "uploads/*"
+      
+    depends_on:
+      - db_postgres   
+    networks:
+      - services_net 
+
+volumes:
+  postgres_data:
+
+networks:
+  services_net:
+    driver: bridge

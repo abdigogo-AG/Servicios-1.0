@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Perfil - Servicios del Hogar</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <!-- LEAFLET CSS (Para el mapa de dirección) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <!-- Reusamos estilos de login para consistencia -->
+    <link rel="stylesheet" href="principal.css">
+    
+    <style>
+        body { background-color: #f4f6f8; align-items: flex-start; }
+
+        /* Layout Principal */
+        .profile-layout {
+            max-width: 1100px; margin: 40px auto; padding: 0 20px;
+            display: grid; grid-template-columns: 280px 1fr; gap: 30px;
+            width: 100%;
+        }
+
+        /* Sidebar (Izquierda) */
+        .profile-sidebar {
+            background: white; padding: 30px 20px; border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); text-align: center; height: fit-content;
+        }
+        
+        .avatar-container { position: relative; width: 120px; height: 120px; margin: 0 auto 15px; }
+        .avatar-img { 
+            width: 100%; height: 100%; border-radius: 50%; object-fit: cover; 
+            border: 4px solid #f0f2f5; 
+        }
+        .avatar-edit {
+            position: absolute; bottom: 5px; right: 5px;
+            background: #0b69ff; color: white; width: 35px; height: 35px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        .avatar-edit:hover { transform: scale(1.1); }
+
+        .menu-btn {
+            display: block; width: 100%; padding: 12px 15px; text-align: left;
+            border: none; background: none; cursor: pointer; border-radius: 8px;
+            margin-bottom: 8px; font-size: 15px; color: #555; transition: 0.2s;
+        }
+        .menu-btn i { margin-right: 10px; width: 20px; text-align: center; }
+        .menu-btn:hover { background: #f0f7ff; color: #0b69ff; }
+        .menu-btn.active { background: #0b69ff; color: white; font-weight: bold; }
+
+        /* Contenido (Derecha) */
+        .profile-content {
+            background: white; padding: 40px; border-radius: 10px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.05); min-height: 500px;
+        }
+        .tab-content { display: none; animation: fadeIn 0.3s; }
+        .tab-content.active { display: block; }
+
+        /* Mapa en Perfil */
+        #mapa-perfil {
+            height: 250px; width: 100%; border-radius: 8px; margin-bottom: 15px;
+            border: 2px solid #eee; z-index: 1;
+        }
+
+        /* Tarjetas de Servicios (Historial) */
+        .service-card {
+            border: 1px solid #eee; border-radius: 10px; padding: 20px; margin-bottom: 20px;
+            transition: 0.2s; position: relative;
+        }
+        .service-card:hover { box-shadow: 0 5px 15px rgba(0,0,0,0.05); border-color: #ddd; }
+        
+        .status-badge {
+            font-size: 12px; padding: 4px 10px; border-radius: 20px; font-weight: bold;
+            display: inline-block; margin-bottom: 10px;
+        }
+        .st-SOLICITADO { background: #fff3cd; color: #856404; }
+        .st-ACEPTADO { background: #d1e7dd; color: #0f5132; }
+        .st-TERMINADO { background: #cff4fc; color: #055160; }
+
+        /* Propuestas */
+        .propuestas-list {
+            margin-top: 15px; padding-top: 15px; border-top: 1px dashed #ddd;
+            display: none; background: #f9f9f9; padding: 15px; border-radius: 8px;
+        }
+        .propuesta-item {
+            display: flex; justify-content: space-between; align-items: center;
+            background: white; padding: 15px; border-radius: 8px; margin-bottom: 10px;
+            border: 1px solid #eee;
+        }
+        .worker-info { display: flex; align-items: center; gap: 15px; }
+        .worker-pic { width: 50px; height: 50px; border-radius: 50%; object-fit: cover; }
+        .price-tag { font-size: 18px; font-weight: bold; color: #28a745; }
+
+        /* Botones */
+        .btn-sm { padding: 6px 12px; font-size: 13px; border-radius: 5px; cursor: pointer; border: none; font-weight: bold; }
+        .btn-ver { background: #6f42c1; color: white; }
+        .btn-whatsapp { background: #25D366; color: white; text-decoration: none; display: inline-flex; align-items: center; gap: 5px; }
+        .btn-aceptar { background: #0b69ff; color: white; }
+        
+        /* Header Simple */
+        .top-nav {
+            background: white; padding: 15px 5%; display: flex; justify-content: space-between;
+            align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); width: 100%;
+            position: sticky; top: 0; z-index: 100;
+        }
+
+        @media (max-width: 768px) {
+            .profile-layout { grid-template-columns: 1fr; }
+            .profile-sidebar { display: flex; flex-direction: column; align-items: center; }
+        }
+        
+        /* Inputs bloqueados */
+        .input-readonly { background-color: #e9ecef; color: #6c757d; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+
+    <!-- HEADER -->
+    <div class="top-nav">
+        <div style="font-weight: bold; color: #0b69ff; font-size: 22px; cursor:pointer;" onclick="window.location.href='index.html'">
+            <i class="fas fa-home"></i> Homely
+        </div>
+        <button onclick="window.location.href='index.html'" style="border: 1px solid #ddd; background: white; padding: 6px 15px; border-radius: 20px; cursor: pointer;">
+            <i class="fas fa-arrow-left"></i> Volver 
+        </button>
+    </div>
+
+    <div class="profile-layout">
+        
+        <!-- SIDEBAR -->
+        <div class="profile-sidebar">
+            <div class="avatar-container">
+                <img id="sidebar-foto" src="https://via.placeholder.com/150?text=Usuario" class="avatar-img">
+                <label for="file-foto" class="avatar-edit"><i class="fas fa-camera"></i></label>
+                <input type="file" id="file-foto" accept="image/*" style="display:none" onchange="subirFoto()">
+            </div>
+            <h3 id="sidebar-nombre" style="margin-bottom: 5px;">Cargando...</h3>
+            <p style="color: #777; font-size: 14px; margin-bottom: 20px;">Cliente</p>
+
+            <button class="menu-btn active" onclick="cambiarTab('datos', this)">
+                <i class="fas fa-user-edit"></i> Mis Datos
+            </button>
+            <button class="menu-btn" onclick="cambiarTab('servicios', this)">
+                <i class="fas fa-clipboard-list"></i> Mis Solicitudes
+            </button>
+            <button class="menu-btn" onclick="cerrarSesion()" style="color: #dc3545;">
+                <i class="fas fa-sign-out-alt"></i> Cerrar Sesión
+            </button>
+        </div>
+
+        <!-- CONTENIDO -->
+        <div class="profile-content">
+            
+            <!-- PESTAÑA 1: EDITAR DATOS -->
+            <div id="tab-datos" class="tab-content active">
+                <h2 style="margin-bottom: 25px; border-bottom: 1px solid #eee; padding-bottom: 10px;">Editar Mis Datos</h2>
+                
+                <form id="form-perfil">
+                    <div class="section-title" style="color: #0b69ff; margin-bottom: 15px; font-weight: bold;">Información Personal</div>
+                    
+                    <div style="display: flex; gap: 15px;">
+                        <div class="input-group" style="flex:1"><label>Nombre</label><input type="text" id="nombre" required></div>
+                        <div class="input-group" style="flex:1"><label>Apellidos</label><input type="text" id="apellidos" required></div>
+                    </div>
+                    <div class="input-group"><label>Teléfono</label><input type="tel" id="telefono" required></div>
+                    <!-- Correo es readonly porque es el ID de login -->
+                    <div class="input-group"><label>Correo (No editable)</label><input type="email" id="correo" class="input-readonly" readonly></div>
+
+                    <div class="section-divider"></div>
+                    
+                    <div class="section-title" style="color: #0b69ff; margin-bottom: 15px; font-weight: bold;">Dirección Predeterminada</div>
+                    <p style="font-size: 13px; color: #666; margin-bottom: 10px;">Mueve el pin en el mapa para actualizar tu ubicación.</p>
+                    
+                    <div id="mapa-perfil"></div>
+
+                    <div class="input-group"><label>Calle</label><input type="text" id="calle" readonly class="input-readonly"></div>
+                    <div style="display: flex; gap: 15px;">
+                        <div class="input-group" style="flex:1"><label>Colonia</label><input type="text" id="colonia" required></div>
+                        <div class="input-group" style="flex:1"><label>C.P.</label><input type="text" id="cp" readonly class="input-readonly"></div>
+                    </div>
+                    <div class="input-group"><label>Ciudad</label><input type="text" id="ciudad" readonly class="input-readonly"></div>
+
+                    <div class="section-divider"></div>
+
+                    <div class="input-group">
+                        <label>Nueva Contraseña (Opcional)</label>
+                        <input type="password" id="password-nuevo" placeholder="Dejar en blanco para no cambiar">
+                    </div>
+
+                    <!-- Inputs Ocultos -->
+                    <input type="hidden" id="url-foto-perfil">
+                    <input type="hidden" id="latitud">
+                    <input type="hidden" id="longitud">
+
+                    <button type="submit" class="login-button">Guardar Cambios</button>
+                </form>
+            </div>
+
+            <!-- PESTAÑA 2: MIS SOLICITUDES -->
+            <div id="tab-servicios" class="tab-content">
+                <h2 style="margin-bottom: 25px; border-bottom: 1px solid #eee; padding-bottom: 10px;">Historial de Solicitudes</h2>
+                <div id="lista-servicios">
+                    <p style="text-align: center; color: #777;">Cargando...</p>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- SCRIPTS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <script>
+        const uid = localStorage.getItem("usuario_id");
+        if(!uid) window.location.href = "login.html";
+
+        let map = null;
+        let marker = null;
+
+        // --- PESTAÑAS ---
+        function cambiarTab(tabId, btnElement) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.getElementById('tab-' + tabId).classList.add('active');
+            
+            document.querySelectorAll('.menu-btn').forEach(el => el.classList.remove('active'));
+            btnElement.classList.add('active');
+
+            if (tabId === 'servicios') cargarServicios();
+            if (tabId === 'datos' && map) setTimeout(() => map.invalidateSize(), 200);
+        }
+
+        // --- 1. CARGAR DATOS DEL PERFIL ---
+        async function cargarPerfil() {
+            try {
+                const res = await fetch(`http://localhost:8080/mi-perfil-cliente/${uid}`);
+                if (!res.ok) throw new Error("Error al cargar");
+                const data = await res.json();
+
+                // Sidebar
+                document.getElementById('sidebar-nombre').innerText = data.nombre;
+                if (data.foto_perfil_url) {
+                    document.getElementById('sidebar-foto').src = data.foto_perfil_url;
+                    document.getElementById('url-foto-perfil').value = data.foto_perfil_url;
+                }
+
+                // Formulario
+                document.getElementById('nombre').value = data.nombre;
+                document.getElementById('apellidos').value = data.apellidos;
+                document.getElementById('telefono').value = data.telefono;
+                document.getElementById('correo').value = data.correo_electronico;
+                
+                document.getElementById('calle').value = data.calle;
+                document.getElementById('colonia').value = data.colonia;
+                document.getElementById('cp').value = data.codigo_postal;
+                document.getElementById('ciudad').value = data.ciudad;
+
+                // Mapa
+                const lat = parseFloat(data.latitud) || 17.80967;
+                const lon = parseFloat(data.longitud) || -97.77643;
+                initMap(lat, lon);
+
+            } catch (e) { console.error(e); }
+        }
+
+        // --- 2. MAPA ---
+        function initMap(lat, lon) {
+            if (map) return;
+            map = L.map('mapa-perfil').setView([lat, lon], 15);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
+            
+            marker = L.marker([lat, lon], {draggable: true}).addTo(map);
+            actualizarInputs(lat, lon);
+
+            marker.on('dragend', function(e) {
+                const pos = marker.getLatLng();
+                actualizarInputs(pos.lat, pos.lng);
+            });
+        }
+
+        function actualizarInputs(lat, lon) {
+            document.getElementById('latitud').value = lat;
+            document.getElementById('longitud').value = lon;
+            // Geocoding reverso para actualizar calle
+            fetch(`https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`)
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('calle').value = data.address.road || "";
+                    document.getElementById('cp').value = data.address.postcode || "";
+                    document.getElementById('ciudad').value = data.address.city || data.address.town || "";
+                });
+        }
+
+        // --- 3. GUARDAR CAMBIOS ---
+        document.getElementById('form-perfil').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const pass = document.getElementById('password-nuevo').value;
+            
+            const datos = {
+                nombre: document.getElementById('nombre').value,
+                apellidos: document.getElementById('apellidos').value,
+                telefono: document.getElementById('telefono').value,
+                calle: document.getElementById('calle').value,
+                colonia: document.getElementById('colonia').value,
+                codigo_postal: document.getElementById('cp').value,
+                ciudad: document.getElementById('ciudad').value,
+                foto_perfil_url: document.getElementById('url-foto-perfil').value || null,
+                latitud: parseFloat(document.getElementById('latitud').value),
+                longitud: parseFloat(document.getElementById('longitud').value),
+                // Solo enviar password si escribió algo
+                password_nuevo: pass ? pass : null
+            };
+
+            try {
+                const res = await fetch(`http://localhost:8080/mi-perfil-cliente/${uid}`, {
+                    method: "PUT",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(datos)
+                });
+                if(res.ok) Swal.fire("¡Listo!", "Datos actualizados", "success");
+                else Swal.fire("Error", "No se pudo guardar", "error");
+            } catch(e) { Swal.fire("Error", "Error de conexión", "error"); }
+        });
+
+        // --- 4. CARGAR SERVICIOS Y PROPUESTAS ---
+        async function cargarServicios() {
+            try {
+                const res = await fetch(`http://localhost:8080/servicios/${uid}`);
+                const servicios = await res.json();
+                const container = document.getElementById('lista-servicios');
+                container.innerHTML = "";
+
+                if(servicios.length === 0) {
+                    container.innerHTML = "<p style='text-align:center'>No tienes solicitudes.</p>";
+                    return;
+                }
+
+                servicios.forEach(s => {
+                    // Botón Ver Propuestas (Solo si está solicitado y hay > 0)
+                    let btnPropuestas = "";
+                    if (s.estado === 'SOLICITADO' && s.num_propuestas > 0) {
+                        btnPropuestas = `<button onclick="verPropuestas('${s.id}')" class="btn-sm btn-ver">Ver ${s.num_propuestas} Propuestas</button>`;
+                    } else if (s.estado === 'SOLICITADO') {
+                        btnPropuestas = `<small style="color:#777">Esperando postulaciones...</small>`;
+                    } else {
+                        btnPropuestas = `<small style="color:green; font-weight:bold">En Proceso / Terminado</small>`;
+                    }
+
+                    container.innerHTML += `
+                        <div class="service-card">
+                            <div style="display:flex; justify-content:space-between;">
+                                <div>
+                                    <span class="status-badge st-${s.estado}">${s.estado}</span>
+                                    <h3 style="margin:5px 0;">${s.titulo}</h3>
+                                    <small>${s.categoria} • ${s.fecha_solicitud.split(' ')[0]}</small>
+                                </div>
+                                <div>${btnPropuestas}</div>
+                            </div>
+                            <div id="propuestas-${s.id}" class="propuestas-list"></div>
+                        </div>
+                    `;
+                });
+            } catch(e) { console.error(e); }
+        }
+
+        // --- 5. VER PROPUESTAS (Despliega lista) ---
+        async function verPropuestas(idServicio) {
+            const box = document.getElementById(`propuestas-${idServicio}`);
+            if(box.style.display === 'block') {
+                box.style.display = 'none'; return;
+            }
+            box.style.display = 'block';
+            box.innerHTML = "Cargando...";
+
+            try {
+                const res = await fetch(`http://localhost:8080/servicios/${idServicio}/propuestas`);
+                const props = await res.json();
+                box.innerHTML = "";
+
+                props.forEach(p => {
+                    box.innerHTML += `
+                        <div class="propuesta-item">
+                            <div class="worker-info">
+                                <img src="${p.foto_perfil_url || 'https://via.placeholder.com/50'}" class="worker-pic">
+                                <div>
+                                    <strong>${p.nombre}</strong> <br>
+                                    <small>⭐ ${p.calificacion_promedio || 'Nuevo'}</small>
+                                </div>
+                            </div>
+                            <div style="text-align:right;">
+                                <div class="price-tag">$${p.precio_oferta}</div>
+                                <div style="margin-top:5px;">
+                                    <a href="https://wa.me/${p.telefono}" target="_blank" class="btn-sm btn-whatsapp"><i class="fab fa-whatsapp"></i> Contactar</a>
+                                    <button onclick="aceptar('${p.id}', '${p.trabajador_id}', '${idServicio}')" class="btn-sm btn-aceptar">Aceptar</button>
+                                </div>
+                            </div>
+                        </div>
+                        <p style="font-size:13px; color:#555; margin-top:5px;"><em>"${p.mensaje}"</em></p>
+                    `;
+                });
+            } catch(e) { box.innerHTML = "Error cargando"; }
+        }
+
+        // --- 6. ACEPTAR TRABAJADOR ---
+        async function aceptar(propuestaId, trabajadorId, servicioId) {
+            const confirm = await Swal.fire({
+                title: '¿Aceptar presupuesto?',
+                text: "El trabajador será notificado para iniciar el servicio.",
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, contratar'
+            });
+
+            if (confirm.isConfirmed) {
+                try {
+                    const res = await fetch(`http://localhost:8080/servicios/contratar`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ servicio_id: servicioId, trabajador_id: trabajadorId, propuesta_id: propuestaId })
+                    });
+                    if (res.ok) {
+                        Swal.fire("¡Listo!", "Trabajador contratado", "success");
+                        cargarServicios();
+                    } else {
+                        Swal.fire("Error", "No se pudo contratar", "error");
+                    }
+                } catch(e) { console.error(e); }
+            }
+        }
+
+        // SUBIR FOTO
+        async function subirFoto() {
+            const file = document.getElementById('file-foto').files[0];
+            const formData = new FormData();
+            formData.append("file", file);
+            try {
+                const res = await fetch("http://localhost:8080/upload", { method: "POST", body: formData });
+                const data = await res.json();
+                document.getElementById('url-foto-perfil').value = data.url;
+                document.getElementById('sidebar-foto').src = data.url;
+            } catch(e) { alert("Error subiendo foto"); }
+        }
+
+        function cerrarSesion() {
+            localStorage.clear();
+            window.location.href = "login.html";
+        }
+
+        // INICIAR
+        cargarPerfil();
+    </script>
+
+<button id="floating-button" onclick="toggleChatWindow()">?</button>
+
+<div id="chat-window">
+    <div id="chat-header">Asistente</div>
+    
+    <div id="chat-messages">
+        <div class="ai-message">
+            <p>¡Hola! Soy tu asistente de reparaciones. Pregúntame cómo arreglar algo.</p>
+        </div>
+    </div>
+    
+    <div id="chat-input-area">
+        <input type="text" id="user-input" placeholder="¿Cómo puedo arreglar x cosa?" onkeypress="handleKeyPress(event)">
+        <button id="send-button" onclick="enviarPregunta()">Enviar</button>
+    </div>
+</div>
+
+<script>
+    // VARIABLES CLAVE - Se cargan desde el endpoint /config
+    let API_KEY = "";
+    const MODEL = "gemini-2.5-flash"; 
+    const chatWindow = document.getElementById('chat-window');
+    const chatMessages = document.getElementById('chat-messages');
+    
+    // Cargar configuración desde el backend
+    async function cargarConfiguracion() {
+        try {
+            const response = await fetch('/config');
+            const config = await response.json();
+            API_KEY = config.GOOGLE_API_KEY || "";
+            console.log("✅ Configuración cargada desde servidor");
+        } catch(e) {
+            console.error("⚠️ Error cargando configuración:", e);
+        }
+    }
+    cargarConfiguracion();
+
+    // Abrir/Cerrar Chat
+    function toggleChatWindow() {
+        // Si el chat está oculto (none), lo muestra (flex), y viceversa
+        chatWindow.style.display = chatWindow.style.display === 'flex' ? 'none' : 'flex';
+        // Si lo abrimos, enfocamos el input para que el usuario pueda escribir
+        if (chatWindow.style.display === 'flex') {
+            document.getElementById('user-input').focus();
+        }
+    }
+
+    // Permite enviar presionando la tecla ENTER
+    function handleKeyPress(event) {
+        if (event.key === 'Enter') {
+            enviarPregunta();
+        }
+    }
+
+    // --- FUNCIONES DE CHAT (UI) ---
+    function addMessage(text, sender) {
+        const messageDiv = document.createElement('div');
+        // Usa innerHTML para permitir formato básico de texto (como los <br>)
+        messageDiv.innerHTML = `<p>${text}</p>`; 
+        messageDiv.classList.add('message');
+        messageDiv.classList.add(sender === 'user' ? 'user-message' : 'ai-message');
+        chatMessages.appendChild(messageDiv);
+        
+        // Desplazamiento automático al final
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+    }
+
+    // --- FUNCIÓN PRINCIPAL DE LA API ---
+    async function enviarPregunta() {
+        const inputElement = document.getElementById("user-input");
+        const inputUsuario = inputElement.value.trim();
+
+        if (!inputUsuario) return; // No envía si está vacío
+
+        // 1. Mostrar el mensaje del usuario y limpiar el input
+        addMessage(inputUsuario, 'user');
+        inputElement.value = '';
+        inputElement.disabled = true; // Deshabilita el input mientras espera respuesta
+
+        // Indicador de carga (placeholder)
+        const loadingMessage = document.createElement('div');
+        loadingMessage.classList.add('message', 'ai-message', 'loading');
+        loadingMessage.innerHTML = '<span>Escribiendo respuesta...</span>';
+        chatMessages.appendChild(loadingMessage);
+        chatMessages.scrollTop = chatMessages.scrollHeight;
+
+
+        // 2. Preparar el Prompt
+        const promptSistema = `
+        responde siempre en español. 
+        trabajas en una empresa de reparaciones del hogar llamada "Homely".
+        Actúa como un asistente experto en reparaciones y mantenimiento del hogar. 
+            El usuario tiene el siguiente problema: "${inputUsuario}".
+            
+            Dame una lista de instrucciones simples, numeradas y seguras para intentar solucionarlo. 
+            Si es algo peligroso (como electricidad avanzada), recomiéndale solicitar un profesional de la empresa Homely.
+            Usa **negritas** para resaltar los puntos clave.
+            Responde de forma amigable y profesional.   
+        `;
+
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL}:generateContent?key=${API_KEY}`;
+
+        try {
+            const response = await fetch(url, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [{ text: promptSistema }]
+                    }]
+                }),
+            });
+
+            if (!response.ok) {
+                // Si hay error (400, 404, etc.), lee el detalle
+                const errorDetalle = await response.text(); 
+                throw new Error(`Error HTTP ${response.status}`);
+            }
+
+            const data = await response.json();
+            const textResult = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+
+            // 3. Procesar y Mostrar la Respuesta de la IA
+            if (textResult) {
+                // Formateamos para que las negritas y saltos de línea se vean en HTML
+                let formattedText = textResult
+                    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>') 
+                    .replace(/\n/g, '<br>');
+                
+                // Quitamos el mensaje de carga
+                chatMessages.removeChild(loadingMessage); 
+                
+                addMessage(formattedText, 'ai');
+            } else {
+                chatMessages.removeChild(loadingMessage); 
+                addMessage("Lo siento, no pude obtener una respuesta en este momento.", 'ai');
+            }
+
+        } catch (error) {
+            console.error("Error en la petición:", error);
+            // Quitar el mensaje de carga y mostrar el error al usuario
+            chatMessages.removeChild(loadingMessage); 
+            addMessage(`Error: ${error.message || 'Error de conexión.'}`, 'ai');
+        } finally {
+            inputElement.disabled = false;
+            inputElement.focus();
+        }
+    }
+</script>
+
+</body>
+</html>

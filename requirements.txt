@@ -1,0 +1,11 @@
+fastapi #framework
+uvicorn[standard] #FastAPI
+psycopg2-binary #Postgres
+pymongo #MongoDB
+pydantic
+email-validator #verifica que el correo sea real
+geopy #maps
+bcrypt==4.0.1 # Para encriptar el password antes de enviarlo a SQL
+python-multipart # Para manejar login (opcional pero recomendado)
+mercadopago
+stripe

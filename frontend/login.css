@@ -1,0 +1,178 @@
+/* Usamos las variables de color de style.css */
+:root {
+    --color-principal: #0b69ff; 
+    --color-texto: #333;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background-color: #f0f2f5; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    margin: 0;
+    color: var(--color-texto);
+}
+
+.login-container {
+    padding: 20px;
+}
+
+.login-box {
+    background-color: #ffffff;
+    padding: 2.5rem;
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+    box-sizing: border-box;
+}
+
+.login-box h2 {
+    margin-top: 0;
+    margin-bottom: 1.5rem;
+    font-size: 24px;
+    color: var(--color-texto);
+}
+
+.input-group {
+    text-align: left;
+    margin-bottom: 1.25rem;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #555;
+}
+
+.input-group input {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-sizing: border-box; 
+    font-size: 1rem;
+}
+
+.login-button {
+    width: 100%;
+    padding: 0.75rem;
+    border: none;
+    border-radius: 5px;
+    background-color: var(--color-principal);
+    color: white;
+    font-size: 1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background-color 0.2s ease;
+    margin-top: 0.5rem;
+}
+
+.login-button:hover {
+    background-color: #0056d6; 
+}
+
+.forgot-password {
+    display: block;
+    margin-top: 1rem;
+    font-size: 0.9rem;
+    color: var(--color-principal);
+    text-decoration: none;
+}
+
+.forgot-password:hover {
+    text-decoration: underline;
+}
+
+.back-to-home {
+    display: block;
+    margin-top: 2rem;
+    font-size: 0.9rem;
+    color: #777;
+    text-decoration: none;
+}
+
+.back-to-home:hover {
+    text-decoration: underline;
+}
+
+
+/* === ESTILOS NUEVOS PARA LA SELECCIÓN DE ROL === */
+
+/* Clase de utilidad para ocultar secciones */
+.hidden {
+    display: none !important;
+}
+
+/* Contenedor de las opciones */
+.role-options {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Tarjeta de cada rol */
+.role-card {
+    background-color: #f8f9fa;
+    border: 2px solid #e9ecef;
+    border-radius: 10px;
+    padding: 15px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    text-align: left;
+}
+
+.role-card:hover {
+    border-color: var(--color-principal, #0b69ff);
+    background-color: #f0f7ff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+}
+
+/* Icono dentro de la tarjeta */
+.role-card .icon-bg {
+    width: 50px;
+    height: 50px;
+    background-color: #e6f0ff;
+    color: var(--color-principal, #0b69ff);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    margin-right: 15px;
+    flex-shrink: 0;
+}
+
+.role-card h3 {
+    margin: 0 0 5px 0;
+    font-size: 18px;
+    color: #333;
+}
+
+.role-card p {
+    margin: 0;
+    font-size: 13px;
+    color: #666;
+}
+
+/* Flecha para volver atrás en el formulario */
+.back-arrow {
+    cursor: pointer;
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 15px;
+    display: inline-block;
+    font-weight: 500;
+}
+
+.back-arrow:hover {
+    color: var(--color-principal, #0b69ff);
+    text-decoration: underline;
+}

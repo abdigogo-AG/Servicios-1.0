@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Servicios del Hogar</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="principal.css">
+    <style>
+        /* Utilidad para ocultar cosas */
+        .d-none { display: none !important; }
+        
+        /* Estilos Header Usuario */
+        .nav-user { display: flex; align-items: center; gap: 10px; }
+        .user-name { font-weight: bold; color: #555; margin-right: 5px; }
+        
+        /* --- NUEVO ESTILO PARA LOS BOTONES DEL HEADER --- */
+        .btn-header-link {
+            text-decoration: none;
+            color: #0b69ff;
+            background-color: #f0f7ff;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            transition: 0.3s;
+            display: flex; align-items: center; gap: 5px;
+        }
+        .btn-header-link:hover {
+            background-color: #0b69ff;
+            color: white;
+        }
+
+        .btn-logout {
+            border: 1px solid #dc3545; color: #dc3545; background: white;
+            padding: 5px 15px; border-radius: 20px; cursor: pointer; font-weight: bold;
+        }
+        .btn-logout:hover { background: #dc3545; color: white; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo" onclick="window.location.href='index.html'" style="cursor: pointer;">
+            <i class="fas fa-home"></i> Homely
+        </div>
+        
+        <nav class="nav-buttons">
+            <div id="nav-invitado">
+                <a href="login.html" class="btn-login">Iniciar Sesión</a>
+                <a href="registro.html" class="btn-registro">Crear Cuenta</a>
+            </div>
+
+            <div id="nav-usuario" class="nav-user d-none">
+                <span id="saludo-usuario" class="user-name">Hola...</span>
+
+                <a id="nav-btn-solicitudes" href="dashboard.html" class="btn-header-link d-none">
+                    <i class="fas fa-list-ul"></i> Mis Solicitudes
+                </a>
+
+                <a id="nav-btn-trabajos" href="dashboard.html" class="btn-header-link d-none">
+                    <i class="fas fa-briefcase"></i> Mis Trabajos
+                </a>
+
+                <a id="nav-btn-perfil" href="#" class="btn-header-link">
+                    <i class="fas fa-user-circle"></i> Mi Perfil
+                </a>
+
+                <button onclick="cerrarSesion()" class="btn-logout" title="Salir">
+                    <i class="fas fa-sign-out-alt"></i>
+                </button>
+            </div>
+        </nav>
+    </header>
+
+    <section class="hero">
+        <h1 id="hero-titulo">Bienvenido a <br> <span>Homely</span></h1>
+        <p id="hero-desc">La plataforma segura para conectar hogares con expertos.</p>
+        
+        <div class="hero-buttons">
+            <a id="btn-solicitar" href="#" class="btn-grande btn-cliente" onclick="manejarClickCliente(event)">
+                <i class="fas fa-paper-plane"></i> Solicitar un Servicio
+            </a>
+            
+            <a id="btn-trabajar" href="#" class="btn-grande btn-trabajador" onclick="manejarClickTrabajador(event)">
+                <i class="fas fa-tools"></i> Quiero Trabajar
+            </a>
+        </div>
+    </section>
+
+    <section class="pasos">
+        <h2 class="section-title" id="titulo-instrucciones">Cómo funciona</h2>
+        <div class="grid-pasos">
+            <div class="paso"><div class="paso-numero">01</div><h3 id="p1-t">Regístrate</h3><p id="p1-d">Crea tu cuenta gratis y verifica tu identidad.</p></div>
+            <div class="paso"><div class="paso-numero">02</div><h3 id="p2-t">Elige</h3><p id="p2-d">Selecciona qué servicio necesitas o qué ofreces.</p></div>
+            <div class="paso"><div class="paso-numero">03</div><h3 id="p3-t">Conecta</h3><p id="p3-d">Encuentra a la persona ideal en minutos.</p></div>
+        </div>
+    </section>
+
+    <footer>
+        <p style="text-align: center; padding: 20px; color: #666;">© 2025 Homely</p>
+    </footer>
+
+    <script>
+        const textos = {
+            invitado: {
+                titulo: "Bienvenido a <br> <span>Homely</span>", desc: "La plataforma segura para conectar hogares con expertos.",
+                p1t: "Regístrate", p1d: "Crea una cuenta para empezar.",
+                p2t: "Elige", p2d: "Dinos si buscas ayuda o quieres trabajar.",
+                p3t: "Conecta", p3d: "Nosotros nos encargamos del resto."
+            },
+            cliente: {
+                titulo: "Hola Cliente, <br> ¿Qué necesitas <span>Hoy</span>?", desc: "Tus expertos están listos. Publica tu problema ahora.",
+                p1t: "Publica", p1d: "Usa el botón de arriba para pedir ayuda.",
+                p2t: "Espera", p2d: "Recibirás propuestas de expertos cercanos.",
+                p3t: "Acepta", p3d: "Elige al mejor y califícalo al final."
+            },
+            trabajador: {
+                titulo: "Hola Colega, <br> Hay trabajo <span>Esperándote</span>", desc: "Revisa las solicitudes disponibles en tu zona.",
+                p1t: "Explora", p1d: "Ve al panel de trabajos disponibles.",
+                p2t: "Postúlate", p2d: "Envía tu cotización a los clientes.",
+                p3t: "Gana", p3d: "Realiza el trabajo y recibe tu pago."
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const uid = localStorage.getItem("usuario_id");
+            const nombre = localStorage.getItem("usuario_nombre");
+            const esTrabajador = localStorage.getItem("es_trabajador") === "true";
+
+            // Referencias del DOM
+            const navInvitado = document.getElementById('nav-invitado');
+            const navUsuario = document.getElementById('nav-usuario');
+            const btnSolicitar = document.getElementById('btn-solicitar');
+            const btnTrabajar = document.getElementById('btn-trabajar');
+            
+            // Botones del Header (NUEVOS)
+            const navBtnSolicitudes = document.getElementById('nav-btn-solicitudes');
+            const navBtnTrabajos = document.getElementById('nav-btn-trabajos');
+            const navBtnPerfil = document.getElementById('nav-btn-perfil');
+
+            if (!uid) {
+                // --- MODO INVITADO ---
+                aplicarTextos('invitado');
+            } else {
+                // --- MODO USUARIO ---
+                navInvitado.classList.add('d-none');
+                navUsuario.classList.remove('d-none');
+                document.getElementById('saludo-usuario').innerText = "Hola, " + nombre.split(" ")[0];
+
+                if (esTrabajador) {
+                    // >>> ES TRABAJADOR <<<
+                    btnSolicitar.classList.add('d-none');
+                    btnTrabajar.innerHTML = '<i class="fas fa-briefcase"></i> Ver Trabajos Disponibles';
+                    
+                    // Header: Mostrar botones de trabajador
+                    navBtnTrabajos.classList.remove('d-none');
+                    navBtnPerfil.href = "perfil_trabajador.html"; // Asegúrate de crear este archivo después
+                    
+                    aplicarTextos('trabajador');
+                } else {
+                    // >>> ES CLIENTE <<<
+                    btnTrabajar.classList.add('d-none');
+                    
+                    // Header: Mostrar botones de cliente
+                    navBtnSolicitudes.classList.remove('d-none');
+                    navBtnPerfil.href = "perfil_cliente.html"; // Asegúrate de crear este archivo después
+
+                    aplicarTextos('cliente');
+                }
+            }
+        });
+
+        // --- MANEJO DE CLICS HERO ---
+
+        function manejarClickCliente(e) {
+            const uid = localStorage.getItem("usuario_id");
+            if (!uid) {
+                e.preventDefault();
+                alertaRegistroRequerido('cliente');
+            } else {
+                window.location.href = "solicitar.html";
+            }
+        }
+
+        function manejarClickTrabajador(e) {
+            const uid = localStorage.getItem("usuario_id");
+            if (!uid) {
+                e.preventDefault();
+                alertaRegistroRequerido('trabajador');
+            } else {
+                window.location.href = "ver_trabajos.html";
+            }
+        }
+
+        // --- FUNCIONES AUXILIARES ---
+
+        function alertaRegistroRequerido(rolDestino) {
+            Swal.fire({
+                title: '¡Alto ahí!',
+                text: "Para usar esta opción necesitas una cuenta.",
+                icon: 'info',
+                showCancelButton: true,
+                confirmButtonColor: '#0b69ff',
+                confirmButtonText: 'Iniciar Sesión / Registrarse',
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    localStorage.setItem('rol_preferido', rolDestino);
+                    window.location.href = "login.html";
+                }
+            });
+        }
+
+        function cerrarSesion() {
+            Swal.fire({
+                title: '¿Cerrar sesión?',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, salir'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    localStorage.clear();
+                    window.location.reload(); 
+                }
+            });
+        }
+
+        function aplicarTextos(rol) {
+            const t = textos[rol];
+            document.getElementById('hero-titulo').innerHTML = t.titulo;
+            document.getElementById('hero-desc').innerText = t.desc;
+            
+            document.getElementById('p1-t').innerText = t.p1t; document.getElementById('p1-d').innerText = t.p1d;
+            document.getElementById('p2-t').innerText = t.p2t; document.getElementById('p2-d').innerText = t.p2d;
+            document.getElementById('p3-t').innerText = t.p3t; document.getElementById('p3-d').innerText = t.p3d;
+        }
+    </script>
+
+</body>
+</html>

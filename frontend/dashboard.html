@@ -1,0 +1,607 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Mi Panel - Servicios del Hogar</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <link rel="stylesheet" href="principal.css">
+    <style>
+        body { background-color: #f4f6f8; align-items: flex-start; }
+        
+        header {
+            background: white; padding: 15px 5%; display: flex; justify-content: space-between; 
+            align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05); width: 100%; position: sticky; top: 0; z-index: 100;
+        }
+        
+        .container-dashboard { max-width: 1000px; margin: 40px auto; padding: 0 20px; width: 100%; }
+
+        .dashboard-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; }
+        .btn-accion { background-color: #0b69ff; color: white; padding: 10px 20px; border-radius: 5px; text-decoration: none; font-weight: bold; display: inline-flex; gap: 8px; border: none; cursor: pointer; }
+        .btn-accion:hover { background-color: #0056d6; transform: translateY(-2px); }
+        .btn-logout { border: 1px solid #dc3545; color: #dc3545; background: white; padding: 5px 15px; border-radius: 20px; cursor: pointer; font-weight: bold; }
+
+        /* GRID SERVICIOS */
+        .grid-servicios { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; }
+        .servicio-card { background: white; border-radius: 10px; padding: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); border-left: 5px solid #ccc; transition: 0.2s; }
+        .servicio-card:hover { transform: translateY(-3px); }
+
+        /* ESTADOS */
+        .borde-SOLICITADO { border-left-color: #ffc107; }
+        .borde-ACEPTADO, .borde-EN_PROCESO { border-left-color: #28a745; }
+        .borde-TERMINADO { border-left-color: #17a2b8; background-color: #f0f8fb; opacity: 0.9; }
+
+        /* DETALLES TRABAJADOR (MODAL) */
+        .worker-profile-card { display: flex; gap: 15px; border-bottom: 1px solid #eee; padding-bottom: 15px; margin-bottom: 15px; }
+        .worker-avatar { width: 60px; height: 60px; border-radius: 50%; object-fit: cover; border: 2px solid #eee; }
+        .worker-details h4 { margin: 0 0 5px; font-size: 16px; }
+        .worker-bio { font-size: 12px; color: #666; margin: 5px 0; font-style: italic; }
+        .worker-stats { display: flex; gap: 10px; font-size: 12px; }
+        .rating-stars { color: #ffc107; }
+
+        /* Botón WhatsApp (Solo visible tras pago) */
+        .btn-whatsapp { background: #25D366; color: white; padding: 8px 15px; border-radius: 20px; text-decoration: none; font-weight: bold; display: inline-flex; align-items: center; gap: 5px; font-size: 14px; margin-top: 10px; }
+        .btn-whatsapp:hover { background: #1ebc57; }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="logo" style="font-weight: bold; color: #0b69ff; font-size: 22px; cursor:pointer;" onclick="window.location.href='index.html'">
+            <i class="fas fa-home"></i> ServiciosApp
+        </div>
+        <div style="display: flex; align-items: center; gap: 15px;">
+            <span id="user-name" style="color: #555; font-weight: 500;">...</span>
+            <button id="btn-mi-perfil" class="btn-accion" style="background: #6c757d; padding: 5px 15px; font-size: 14px;">
+                <i class="fas fa-user"></i> Perfil
+            </button>
+            <button onclick="cerrarSesion()" class="btn-logout"><i class="fas fa-sign-out-alt"></i></button>
+        </div>
+    </header>
+
+    <div class="container-dashboard">
+        <div class="dashboard-header">
+            <h1 id="titulo-dashboard">Mis Actividades</h1>
+            <a id="btn-principal-accion" href="#" class="btn-accion"><i class="fas fa-plus"></i> Acción</a>
+        </div>
+
+        <div id="lista-servicios" class="grid-servicios">
+            <p>Cargando información...</p>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "http://localhost:8080";
+        const usuarioId = localStorage.getItem("usuario_id");
+        const usuarioNombre = localStorage.getItem("usuario_nombre");
+        const esTrabajador = localStorage.getItem("es_trabajador") === "true"; 
+
+        if (!usuarioId) window.location.href = "login.html";
+
+        document.getElementById('user-name').innerText = "Hola, " + (usuarioNombre ? usuarioNombre.split(" ")[0] : "Usuario");
+        
+        const btnPerfil = document.getElementById('btn-mi-perfil');
+        btnPerfil.onclick = () => {
+            window.location.href = esTrabajador ? "perfil_trabajador.html" : "perfil_cliente.html";
+        };
+
+        const titulo = document.getElementById('titulo-dashboard');
+        const btnAccion = document.getElementById('btn-principal-accion');
+        const contenedor = document.getElementById('lista-servicios');
+
+        async function cargarDashboard() {
+            // 1. VERIFICAR SI VENIMOS DE UN PAGO DE STRIPE
+            const urlParams = new URLSearchParams(window.location.search);
+            const statusPago = urlParams.get('status'); // 'approved', 'failure'
+            const sessionId = urlParams.get('session'); // ID de la sesión de Stripe
+            
+            console.log("🔍 Dashboard cargado - Verificando pago...");
+            console.log("  status:", statusPago);
+            console.log("  session:", sessionId);
+            
+            if (statusPago === 'approved' && sessionId) {
+                console.log("✅ Detectado retorno de Stripe con pago aprobado");
+                
+                // Validar el pago con el backend
+                try {
+                    console.log(`🔗 Validando sesión en backend: ${API_URL}/pagos/validar-sesion/${sessionId}`);
+                    const validacionRes = await fetch(`${API_URL}/pagos/validar-sesion/${sessionId}`);
+                    const validacion = await validacionRes.json();
+                    
+                    console.log("📊 Respuesta de validación:", validacion);
+                    
+                    if (validacion.status === 'approved') {
+                        console.log("✅ Pago validado como COMPLETADO");
+                        // Limpiamos la URL primero
+                        window.history.replaceState({}, document.title, "dashboard.html");
+                        
+                        Swal.fire({
+                            title: "¡Pago Recibido! ✅",
+                            text: "Has contratado al trabajador correctamente. Ahora puedes ver su contacto.",
+                            icon: "success",
+                            didClose: () => {
+                                console.log("🔄 Recargando página...");
+                                location.reload();
+                            }
+                        });
+                        return;
+                    } else if (validacion.status === 'pending') {
+                        console.log("⏳ Pago aún pendiente");
+                        window.history.replaceState({}, document.title, "dashboard.html");
+                        Swal.fire({
+                            title: "Pago Pendiente ⏳",
+                            text: validacion.mensaje || "El pago aún está siendo procesado. Por favor espera...",
+                            icon: "info",
+                            allowOutsideClick: false
+                        });
+                    } else {
+                        console.log("❌ Estado desconocido:", validacion.status);
+                        window.history.replaceState({}, document.title, "dashboard.html");
+                        Swal.fire({
+                            title: "Estado Desconocido",
+                            text: validacion.mensaje || "No se pudo determinar el estado del pago.",
+                            icon: "warning"
+                        });
+                    }
+                } catch (error) {
+                    console.error("❌ Error validando sesión:", error);
+                    window.history.replaceState({}, document.title, "dashboard.html");
+                    Swal.fire("Error", "No se pudo validar el pago con el servidor.", "error");
+                }
+            } else if (statusPago === 'failure') {
+                console.log("❌ Pago cancelado o fallido");
+                window.history.replaceState({}, document.title, "dashboard.html");
+                Swal.fire("Pago Cancelado ❌", "No completaste el pago. Intenta de nuevo.", "error");
+            }
+
+            let url = "";
+            if (esTrabajador) {
+                titulo.innerText = "Mis Trabajos Activos";
+                btnAccion.innerHTML = `<i class="fas fa-search"></i> Buscar Nuevos Trabajos`;
+                btnAccion.href = "ver_trabajos.html"; 
+                btnAccion.style.background = "#28a745";
+                url = `${API_URL}/trabajador/mis-trabajos/${usuarioId}`;
+            } else {
+                titulo.innerText = "Mis Solicitudes";
+                btnAccion.innerHTML = `<i class="fas fa-paper-plane"></i> Pedir Nuevo Servicio`;
+                btnAccion.href = "solicitar.html";
+                url = `${API_URL}/servicios/${usuarioId}`;
+            }
+
+            try {
+                const res = await fetch(url);
+                const datos = await res.json();
+                contenedor.innerHTML = ""; 
+
+                if (datos.length === 0) {
+                    contenedor.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:40px; background:white; border-radius:10px;">
+                        <i class="fas fa-inbox" style="font-size:40px; color:#ccc;"></i><p>No hay actividad aún.</p>
+                    </div>`;
+                    return;
+                }
+
+                datos.forEach(s => {
+                    const fecha = new Date(s.fecha_programada || s.fecha_solicitud).toLocaleDateString();
+                    const precio = s.precio_estimado > 0 ? `$${s.precio_estimado}` : "A convenir";
+                    
+                    // --- INFORMACIÓN DEL TRABAJADOR (Después de pago) ---
+                    let infoTrabajadorHTML = "";
+                    if ((s.estado === 'EN_PROCESO' || s.estado === 'TERMINADO') && s.trabajador_nombre) {
+                        // Generar estrellas
+                        let estrellas = "";
+                        if (s.trabajador_calificacion && s.trabajador_calificacion > 0) {
+                            const rating = Math.round(s.trabajador_calificacion);
+                            estrellas = "⭐".repeat(rating);
+                        } else {
+                            estrellas = "Cuenta Nueva";
+                        }
+                        
+                        infoTrabajadorHTML = `
+                            <div style="background:#f9f9f9; padding:15px; border-radius:8px; margin:10px 0; border:1px solid #e0e0e0;">
+                                <div style="display:flex; gap:15px; align-items:flex-start;">
+                                    <div style="flex:1;">
+                                        <h4 style="margin:0 0 5px; color:#333;">${s.trabajador_nombre}</h4>
+                                        <div style="color:#f39c12; font-size:14px; margin-bottom:5px;">${estrellas}</div>
+                                        <small style="color:#666; display:block; margin-bottom:8px;"><i class="fas fa-briefcase"></i> ${s.categoria}</small>
+                                        <p style="margin:8px 0; color:#555; font-size:13px;">${s.trabajador_bio || 'Sin descripción'}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    }
+                    
+                    // --- INFORMACIÓN DEL CLIENTE (Para trabajador) ---
+                    let infoClienteHTML = "";
+                    if ((s.estado === 'EN_PROCESO' || s.estado === 'TERMINADO') && esTrabajador) {
+                        infoClienteHTML = `
+                            <div style="background:#f0f8ff; padding:15px; border-radius:8px; margin:10px 0; border:1px solid #b3d9ff;">
+                                <h4 style="margin:0 0 10px; color:#0066cc;"><i class="fas fa-user"></i> Cliente</h4>
+                                <small style="color:#666; display:block;"><i class="fas fa-map-marker-alt"></i> ${s.direccion_texto}</small>
+                            </div>
+                        `;
+                    }
+                    
+                    // --- LÓGICA DE CONTACTO (Solo si ya se pagó/aceptó) ---
+                    let contactoHTML = "";
+                    if ((s.estado === 'ACEPTADO' || s.estado === 'EN_PROCESO' || s.estado === 'TERMINADO')) {
+                        // Si eres cliente, mostrar teléfono del trabajador
+                        if (!esTrabajador && s.trabajador_telefono) {
+                            const waNumber = s.trabajador_telefono.replace(/\D/g, '');
+                            contactoHTML = `
+                                <div style="background:#e8f5e9; padding:10px; border-radius:8px; margin:10px 0; border-left:4px solid #28a745;">
+                                    <small style="color:#666;">📞 Teléfono del trabajador:</small><br>
+                                    <strong style="color:#28a745; font-size:16px;">${s.trabajador_telefono}</strong>
+                                    <a href="https://wa.me/52${waNumber}" target="_blank" class="btn-whatsapp" style="margin-top:8px;">
+                                        <i class="fab fa-whatsapp"></i> Contactar por WhatsApp
+                                    </a>
+                                </div>
+                            `;
+                        } else if (esTrabajador && s.cliente_telefono) {
+                            // Si eres trabajador, mostrar teléfono del cliente
+                            const waNumber = s.cliente_telefono.replace(/\D/g, '');
+                            contactoHTML = `
+                                <div style="background:#e3f2fd; padding:10px; border-radius:8px; margin:10px 0; border-left:4px solid #2196F3;">
+                                    <small style="color:#666;">📞 Teléfono del cliente:</small><br>
+                                    <strong style="color:#2196F3; font-size:16px;">${s.cliente_telefono}</strong>
+                                    <a href="https://wa.me/52${waNumber}" target="_blank" class="btn-whatsapp" style="margin-top:8px; background:#2196F3;">
+                                        <i class="fab fa-whatsapp"></i> Contactar por WhatsApp
+                                    </a>
+                                </div>
+                            `;
+                        }
+                    }
+
+                    // --- BOTONES DE ACCIÓN ---
+                    let accionesHTML = "";
+                    if (!esTrabajador) { 
+                        // VISTA CLIENTE
+                        if (s.estado === 'SOLICITADO') {
+                            const num = s.num_propuestas || 0;
+                            accionesHTML = num > 0 
+                                ? `<button onclick="verPropuestas('${s.id}')" class="btn-accion" style="background:#6f42c1; font-size:12px; width:100%; justify-content:center;">Ver ${num} Propuestas</button>`
+                                : `<small style="color:#777">Esperando postulaciones...</small>`;
+                        } else if (s.estado === 'EN_PROCESO') {
+                            accionesHTML = `<button onclick="completarServicio('${s.id}')" class="btn-accion" style="background:#28a745; font-size:12px; width:100%; justify-content:center;"><i class="fas fa-check"></i> Servicio Completado</button>`;
+                        } else if (s.estado === 'TERMINADO') {
+                            accionesHTML = `<small style="color:#17a2b8; font-weight:bold;"><i class="fas fa-check-double"></i> Servicio Completado</small>`;
+                        }
+                    } else {
+                        // VISTA TRABAJADOR
+                        let estadoColor = "#ccc";
+                        if (s.estado === 'EN_PROCESO') estadoColor = "#28a745";
+                        if (s.estado === 'TERMINADO') estadoColor = "#17a2b8";
+                        
+                        accionesHTML = `<small style="color:${estadoColor}; font-weight:bold;"><i class="fas fa-briefcase"></i> ${s.estado}</small>`;
+                    }
+
+                    const html = `
+                        <div class="servicio-card borde-${s.estado}">
+                            <div class="card-header">
+                                <span class="card-tag">${s.categoria || 'Servicio'}</span>
+                                <span class="precio">${precio}</span>
+                            </div>
+                            <h3 class="card-title">${s.titulo}</h3>
+                            <p class="card-desc">${s.descripcion}</p>
+                            
+                            <div style="margin:10px 0; font-size:13px; color:#888; border-top:1px solid #eee; padding-top:10px;">
+                                <i class="far fa-calendar-alt"></i> ${fecha} <br>
+                                <i class="fas fa-map-marker-alt"></i> ${s.direccion_texto || 'Ubicación mapa'}
+                            </div>
+
+                            ${infoTrabajadorHTML}
+                            ${infoClienteHTML}
+                            ${contactoHTML}
+                            <div style="margin-top:10px;">${accionesHTML}</div>
+                        </div>
+                    `;
+                    contenedor.innerHTML += html;
+                });
+            } catch (error) { console.error(error); }
+        }
+
+        // --- VER PROPUESTAS (SIN TELÉFONO) ---
+        async function verPropuestas(id) {
+            try {
+                // Primero, comprobar el estado del servicio para evitar ver propuestas si ya fue contratado
+                const svcRes = await fetch(`${API_URL}/servicio/${id}`);
+                if (!svcRes.ok) {
+                    console.error('No se pudo obtener el servicio para verificar estado');
+                } else {
+                    const svc = await svcRes.json();
+                    if (svc.estado && svc.estado !== 'SOLICITADO') {
+                        // Mostrar información del trabajador (ya asignado)
+                        const mensaje = `Estado: ${svc.estado}\n\n` +
+                            (svc.trabajador_nombre ? `Trabajador: ${svc.trabajador_nombre}\n` : '') +
+                            (svc.trabajador_bio ? `\n${svc.trabajador_bio}\n` : '') +
+                            (svc.trabajador_telefono ? `\nTel: ${svc.trabajador_telefono}` : '');
+                        return Swal.fire('Información', mensaje, 'info');
+                    }
+                }
+
+                const res = await fetch(`${API_URL}/servicios/${id}/propuestas`);
+                const props = await res.json();
+
+                if(props.length === 0) return Swal.fire("Aún no hay propuestas");
+
+                let htmlLista = "";
+                props.forEach(p => {
+                    const rating = p.calificacion_promedio ? `⭐ ${p.calificacion_promedio}` : '✨ Nuevo';
+                    const exp = p.anios_experiencia ? `(${p.anios_experiencia} años exp)` : "";
+                    
+                    htmlLista += `
+                        <div class="worker-profile-card">
+                            <img src="${p.foto_perfil_url || 'https://via.placeholder.com/60'}" class="worker-avatar" onerror="this.src='https://via.placeholder.com/60'">
+                            <div class="worker-details" style="text-align:left; flex:1;">
+                                <h4>${p.nombre} ${p.apellidos || ''}</h4>
+                                <div class="worker-stats" style="color:#f39c12;">${rating} <span style="color:#777;">${exp}</span></div>
+                                <p class="worker-bio">"${p.mensaje}"</p>
+                                <div style="font-weight:bold; color:#28a745; margin-top:5px;">Oferta: $${p.precio_oferta}</div>
+                                <small style="color:#999; font-size:10px;">* Contacto disponible tras contratar</small>
+                            </div>
+                            <button class="btn-accion" style="height:fit-content; font-size:12px; background:#009ee3;" onclick="iniciarPagoReal('${id}', '${p.trabajador_id}', '${p.id}', ${p.precio_oferta})">
+                                Pagar y Contratar
+                            </button>
+                        </div>
+                    `;
+                });
+
+                Swal.fire({
+                    title: 'Propuestas Recibidas',
+                    html: `<div style="max-height:400px; overflow-y:auto; text-align:left;">${htmlLista}</div>`,
+                    width: 600,
+                    showConfirmButton: false, 
+                    showCloseButton: true
+                });
+
+            } catch(e) { 
+                console.error(e); 
+                Swal.fire("Error", "No se cargaron las propuestas", "error"); 
+            }
+        }
+
+        // --- PAGO REAL CON STRIPE ---
+        async function iniciarPagoReal(servicioId, trabajadorId, propuestaId, monto) {
+            console.log("💳 Iniciando pago...");
+            console.log("  servicioId:", servicioId);
+            console.log("  trabajadorId:", trabajadorId);
+            console.log("  propuestaId:", propuestaId);
+            console.log("  monto:", monto);
+            
+            Swal.close(); // Cerrar lista
+
+            Swal.fire({
+                title: 'Generando pago...',
+                text: 'Te estamos redirigiendo a Stripe para asegurar tu dinero.',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            try {
+                // 1. Llamamos al endpoint correcto del backend
+                console.log(`🔗 Enviando solicitud a: ${API_URL}/pagos/crear-preferencia`);
+                const res = await fetch(`${API_URL}/pagos/crear-preferencia`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        servicio_id: servicioId,
+                        titulo: "Contratación de Servicio",
+                        precio: parseFloat(monto),
+                        trabajador_id: trabajadorId,
+                        propuesta_id: propuestaId
+                    })
+                });
+
+                console.log("📊 Respuesta del servidor - Status:", res.status);
+
+                let data = null;
+                try {
+                    data = await res.json();
+                    console.log("📋 Datos recibidos:", data);
+                } catch (errJson) {
+                    console.error("❌ Error parseando JSON:", errJson);
+                    Swal.fire("Error", "El servidor no respondió correctamente", "error");
+                    return;
+                }
+
+                if (!res.ok) {
+                    const servidorMsg = data && (data.detail || data.error || data.message) ? (data.detail || data.error || data.message) : `Error del servidor (${res.status})`;
+                    console.error("❌ Error del servidor:", servidorMsg);
+                    Swal.fire("Error", servidorMsg, "error");
+                    return;
+                }
+
+                if (data && data.init_point) {
+                    console.log("✅ URL de Stripe recibida:", data.init_point);
+                    console.log("🔗 Redirigiendo a Stripe...");
+                    // 2. ¡REDIRECCIÓN REAL! Nos vamos a la página de Stripe
+                    window.location.href = data.init_point;
+                } else {
+                    console.error("❌ No se recibió init_point en la respuesta");
+                    Swal.fire("Error", "No se pudo generar el link de pago", "error");
+                }
+
+            } catch (e) {
+                console.error("❌ Error en iniciarPagoReal:", e);
+                Swal.fire("Error", "Fallo de conexión con el servidor: " + e.message, "error");
+            }
+        }
+
+        async function finalizarServicio(id) {
+            const { value: formValues } = await Swal.fire({
+                title: 'Calificar Servicio',
+                html: '<input id="swal-input1" class="swal2-input" type="number" min="1" max="5" placeholder="Estrellas (1-5)"><textarea id="swal-input2" class="swal2-textarea" placeholder="Reseña..."></textarea>',
+                focusConfirm: false,
+                preConfirm: () => { return { calificacion: document.getElementById('swal-input1').value, resena: document.getElementById('swal-input2').value } }
+            });
+            if (formValues) {
+                try {
+                    const res = await fetch(`${API_URL}/servicios/finalizar`, {
+                        method: 'POST', headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify({ servicio_id: id, calificacion: parseInt(formValues.calificacion), resena: formValues.resena })
+                    });
+                    if(res.ok) { Swal.fire("¡Gracias!", "Servicio finalizado.", "success"); cargarDashboard(); }
+                } catch(e) { console.error(e); }
+            }
+        }
+
+        async function completarServicio(servicioId) {
+            console.log("✅ Cliente confirma servicio completado:", servicioId);
+            
+            // Primero confirmar que está completo
+            const { isConfirmed } = await Swal.fire({
+                title: '¿Servicio Completado?',
+                text: 'Confirma que el trabajo ha sido realizado correctamente.',
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Sí, está completo',
+                cancelButtonText: 'Cancelar',
+                confirmButtonColor: '#28a745',
+                cancelButtonColor: '#dc3545'
+            });
+
+            if (!isConfirmed) return;
+
+            // Segundo: Abrir formulario de calificación
+            const { value: calificacionData } = await Swal.fire({
+                title: 'Calificar al Trabajador',
+                html: `
+                    <div style="text-align: center; padding: 20px;">
+                        <div style="margin-bottom: 30px;">
+                            <label style="display: block; margin-bottom: 15px; font-weight: bold; color: #333;">¿Cómo fue el servicio?</label>
+                            <div id="rating-stars" style="font-size: 40px; letter-spacing: 10px; cursor: pointer;">
+                                <span class="star" data-value="1" style="cursor: pointer; color: #ddd; transition: color 0.2s;">★</span>
+                                <span class="star" data-value="2" style="cursor: pointer; color: #ddd; transition: color 0.2s;">★</span>
+                                <span class="star" data-value="3" style="cursor: pointer; color: #ddd; transition: color 0.2s;">★</span>
+                                <span class="star" data-value="4" style="cursor: pointer; color: #ddd; transition: color 0.2s;">★</span>
+                                <span class="star" data-value="5" style="cursor: pointer; color: #ddd; transition: color 0.2s;">★</span>
+                            </div>
+                            <input type="hidden" id="rating-value" value="0">
+                            <p id="rating-text" style="margin-top: 10px; color: #999; font-size: 14px;">Selecciona una calificación</p>
+                        </div>
+                        
+                        <div>
+                            <label style="display: block; margin-bottom: 10px; font-weight: bold; color: #333;">Deja una reseña (opcional)</label>
+                            <textarea id="resena-text" class="swal2-textarea" placeholder="Cuéntanos tu experiencia con el trabajador..." style="min-height: 100px; resize: vertical;"></textarea>
+                        </div>
+                    </div>
+                `,
+                didOpen: () => {
+                    // Configurar las estrellas para ser interactivas
+                    const stars = document.querySelectorAll('.star');
+                    const ratingValue = document.getElementById('rating-value');
+                    const ratingText = document.getElementById('rating-text');
+                    
+                    const textos = ["", "Muy malo", "Malo", "Normal", "Bueno", "Excelente"];
+                    
+                    stars.forEach(star => {
+                        star.addEventListener('click', () => {
+                            const value = parseInt(star.dataset.value);
+                            ratingValue.value = value;
+                            
+                            // Cambiar color de las estrellas
+                            stars.forEach(s => {
+                                if (parseInt(s.dataset.value) <= value) {
+                                    s.style.color = '#ffc107';
+                                } else {
+                                    s.style.color = '#ddd';
+                                }
+                            });
+                            
+                            ratingText.textContent = textos[value];
+                        });
+                        
+                        // Efecto hover
+                        star.addEventListener('mouseover', () => {
+                            const value = parseInt(star.dataset.value);
+                            stars.forEach(s => {
+                                if (parseInt(s.dataset.value) <= value) {
+                                    s.style.color = '#ffb300';
+                                } else {
+                                    s.style.color = '#ddd';
+                                }
+                            });
+                        });
+                    });
+                    
+                    document.getElementById('rating-stars').addEventListener('mouseout', () => {
+                        const value = parseInt(ratingValue.value);
+                        stars.forEach(s => {
+                            if (parseInt(s.dataset.value) <= value) {
+                                s.style.color = '#ffc107';
+                            } else {
+                                s.style.color = '#ddd';
+                            }
+                        });
+                    });
+                },
+                showCancelButton: true,
+                confirmButtonText: 'Guardar Calificación',
+                cancelButtonText: 'Cancelar',
+                preConfirm: () => {
+                    const calificacion = document.getElementById('rating-value').value;
+                    const resena = document.getElementById('resena-text').value;
+                    
+                    if (calificacion === '0') {
+                        Swal.showValidationMessage('Por favor selecciona una calificación');
+                        return false;
+                    }
+                    
+                    return {
+                        calificacion: parseInt(calificacion),
+                        resena: resena.trim()
+                    };
+                }
+            });
+
+            if (!calificacionData) return; // Usuario canceló
+
+            // Tercero: Enviar datos al servidor
+            Swal.fire({
+                title: 'Guardando calificación...',
+                allowOutsideClick: false,
+                didOpen: () => { Swal.showLoading(); }
+            });
+
+            try {
+                const res = await fetch(`${API_URL}/servicios/${servicioId}/completar`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        calificacion: calificacionData.calificacion,
+                        resena: calificacionData.resena
+                    })
+                });
+
+                if (res.ok) {
+                    Swal.fire({
+                        title: '¡Gracias por tu calificación! ⭐',
+                        html: `
+                            <p>El servicio ha sido marcado como completado.</p>
+                            <p style="font-size: 24px; color: #ffc107; margin: 20px 0;">
+                                ${'★'.repeat(calificacionData.calificacion)}${'☆'.repeat(5 - calificacionData.calificacion)}
+                            </p>
+                            <p style="color: #666; font-size: 14px;">${calificacionData.resena || 'Sin comentarios adicionales'}</p>
+                        `,
+                        icon: 'success',
+                        didClose: () => {
+                            cargarDashboard();
+                        }
+                    });
+                } else {
+                    const error = await res.json();
+                    Swal.fire('Error', error.detail || 'No se pudo completar el servicio', 'error');
+                }
+            } catch (e) {
+                console.error("❌ Error completando servicio:", e);
+                Swal.fire('Error', 'Fallo de conexión: ' + e.message, 'error');
+            }
+        }
+
+        function cerrarSesion() {
+            if(confirm("¿Cerrar sesión?")) { localStorage.clear(); window.location.href = "login.html"; }
+        }
+
+        cargarDashboard();
+    </script>
+</body>
+</html>

@@ -1,0 +1,834 @@
+:root {
+    --color-principal: #0b69ff; 
+    --color-texto: #333;
+    --color-fondo-claro: #f7f7f7;
+    --color-fondo-resena: #d3eef7;
+    --color-borde: #ddd;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    margin: 0;
+    background-color: #fff;
+    color: var(--color-texto);
+}
+
+/* Contenedor Principal */
+.page-container {
+    display: grid;
+    grid-template-columns: 240px 1fr; /* Columna fija para sidebar, columna flexible para contenido */
+    min-height: 100vh;
+}
+
+/* Barra Lateral*/
+.sidebar {
+    background-color: var(--color-fondo-claro);
+    padding: 25px 20px;
+    border-right: 1px solid var(--color-borde);
+    display: flex;
+    flex-direction: column;
+}
+
+.search-bar {
+    position: relative;
+    margin-bottom: 30px;
+}
+
+.search-bar input {
+    width: 100%;
+    padding: 10px 10px 10px 35px; /* Espacio para el icono */
+    border: 1px solid var(--color-texto);
+    border-radius: 5px;
+    font-size: 14px;
+    box-sizing: border-box; 
+}
+
+.search-bar .fa-search {
+    position: absolute;
+    left: 12px;
+    top: 12px;
+    color: #999;
+}
+
+.nav-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.nav-menu li {
+    margin-bottom: 10px;
+}
+
+.nav-menu a {
+    display: flex;
+    align-items: center;
+    padding: 12px 15px;
+    text-decoration: none;
+    color: var(--color-texto);
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 15px;
+}
+
+.nav-menu a i {
+    margin-right: 15px;
+    width: 20px;
+    text-align: center;
+    color: #555;
+}
+
+.nav-menu a.active,
+.nav-menu a:hover {
+    background-color: var(--color-principal);
+    color: white;
+}
+
+.nav-menu a.active i,
+.nav-menu a:hover i {
+    color: white;
+}
+
+/*Contenido Principal*/
+.main-wrapper {
+    
+    display: flex;
+    flex-direction: column;
+}
+
+.main-content {
+    padding: 20px 40px;
+    background-color: #f7f7f7;
+    flex-grow: 1; 
+}
+
+/*Header del Contenido*/
+.main-header {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    padding: 10px 40px; 
+    border-bottom: 1px solid var(--color-borde);
+    margin-bottom: 30px;
+}
+
+.login-link {
+    text-decoration: none;
+    color: var(--color-texto);
+    font-weight: 500;
+    font-size: 14px;
+}
+
+.login-link i {
+    margin-right: 8px;
+    color: var(--color-principal);
+}
+
+/* Como Funcionamos */
+.intro-section h2 {
+    color: var(--color-principal);
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.intro-section h2 i {
+    margin-right: 10px;
+}
+
+.intro-section p {
+    font-size: 16px;
+    line-height: 1.6;
+    max-width: 800px;
+}
+
+/* Servicios Básicos  */
+.services-section {
+    margin-top: 40px;
+}
+
+.services-section h3 {
+    font-size: 20px;
+    border-bottom: 2px solid var(--color-principal);
+    padding-bottom: 5px;
+    display: inline-block;
+    margin-bottom: 25px;
+}
+
+.services-grid {
+    display: flex;
+    justify-content: space-between;
+    gap: 30px;
+}
+
+.service-card {
+    flex: 1;
+    border: 1px solid var(--color-borde);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.service-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.service-card img {
+    width: 100%;
+    height: 180px;
+    object-fit: cover; /* Para que la imagen se ajuste bien */
+    display: block;
+}
+
+.service-card-content {
+    padding: 20px;
+    text-align: center;
+}
+
+.service-card-content h4 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+}
+
+.service-card-content h4 i {
+    margin-right: 10px;
+    color: var(--color-principal);
+}
+
+/* Mas Servicios y Reseñas */
+.bottom-content {
+    display: flex;
+    gap: 30px;
+    margin-top: 40px;
+}
+
+/* Mas Servicios */
+.more-services {
+    flex: 1;
+}
+
+.more-services h4 {
+    font-size: 16px;
+    color: var(--color-principal);
+    margin-bottom: 20px;
+}
+
+.more-services-list {
+    display: flex;
+    flex-direction: column;
+    gap: 25px;
+}
+
+.service-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.service-item .icon-wrapper {
+    font-size: 24px;
+    color: var(--color-principal);
+    width: 40px;
+    text-align: center;
+}
+
+.service-item-text a {
+    text-decoration: none;
+    color: var(--color-texto);
+    font-weight: bold;
+    font-size: 15px;
+    display: block;
+    margin-bottom: 3px;
+}
+
+.service-item-text a:hover {
+    text-decoration: underline;
+}
+
+.service-item-text p {
+    margin: 0;
+    font-size: 14px;
+    color: #666;
+}
+
+/*Reseña*/
+.reviews {
+    flex: 1;
+    background-color: var(--color-fondo-resena);
+    border: 1px solid var(--color-principal);
+    border-radius: 10px;
+    padding: 25px;
+}
+
+.reviews h4 {
+    font-size: 18px;
+    font-weight: 600;
+    color: var(--color-principal);
+    margin-top: 0;
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.review-item {
+    margin-bottom: 20px;
+    border-bottom: 1px dashed #7adafa;
+    padding-bottom: 15px;
+}
+
+.review-item:last-child {
+    margin-bottom: 0;
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+.review-item p {
+    margin: 0 0 10px 0;
+    font-style: italic;
+    line-height: 1.5;
+}
+
+.review-item .author {
+    text-align: right;
+    font-weight: bold;
+    font-style: normal;
+    color: #555;
+}
+
+
+/*ESTILOS PARA PERFIL.HTML*/
+
+section {
+    background-color: #fff;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    margin-bottom: 30px;
+}
+
+section h3 {
+    font-size: 20px;
+    color: var(--color-principal);
+    border-bottom: 2px solid var(--color-borde);
+    padding-bottom: 10px;
+    margin-top: 0;
+}
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+}
+
+.profile-pic {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 4px solid var(--color-borde);
+}
+
+.profile-header-info h2 {
+    margin: 0;
+    font-size: 28px;
+    color: var(--color-texto);
+}
+
+.profile-header-info p {
+    font-size: 16px;
+    color: #666;
+    margin: 5px 0 15px 0;
+}
+
+.btn-edit {
+    background-color: var(--color-principal);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 5px;
+    font-weight: 500;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.btn-edit:hover {
+    background-color: #0056d6;
+}
+
+.profile-info-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.info-item {
+    background-color: var(--color-fondo-claro);
+    padding: 15px;
+    border-radius: 5px;
+}
+
+.info-item strong {
+    display: block;
+    font-size: 14px;
+    color: #555;
+    margin-bottom: 5px;
+}
+
+.info-item p {
+    margin: 0;
+    font-size: 16px;
+    color: var(--color-texto);
+}
+
+.service-history-item {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 20px;
+    border: 1px solid var(--color-borde);
+    border-radius: 8px;
+    margin-bottom: 15px;
+}
+
+.service-history-item i {
+    font-size: 24px;
+    color: var(--color-principal);
+    width: 40px;
+    text-align: center;
+}
+
+.service-history-item div {
+    flex-grow: 1;
+}
+
+.service-history-item div strong {
+    font-size: 18px;
+    color: var(--color-texto);
+}
+
+.service-history-item div p {
+    font-size: 14px;
+    color: #666;
+    margin: 4px 0 0 0;
+}
+
+.service-status {
+    font-weight: bold;
+    padding: 5px 12px;
+    border-radius: 15px;
+    font-size: 13px;
+}
+
+.service-status.completed {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+
+/* ESTILOS PARA SERVICIO-TECNICO.HTML */
+
+.service-request-form {
+    background-color: #fff;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+}
+
+.service-request-form h2 {
+    color: var(--color-principal);
+    margin-top: 0;
+}
+
+.service-request-form p {
+    font-size: 16px;
+    color: #666;
+    margin-bottom: 25px;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 500;
+    color: #333;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid var(--color-borde);
+    border-radius: 5px;
+    font-size: 15px;
+    font-family: inherit;
+    box-sizing: border-box; /* Importante */
+}
+
+.form-group textarea {
+    resize: vertical; /* Permite al usuario ajustar la altura */
+    min-height: 100px;
+}
+
+.btn-submit {
+    background-color: var(--color-principal);
+    color: white;
+    border: none;
+    padding: 12px 25px;
+    border-radius: 5px;
+    font-weight: bold;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.2s;
+}
+
+.btn-submit:hover {
+    background-color: #0056d6; /* Azul más oscuro (del login) */
+}
+
+.common-issues {
+    margin-top: 30px;
+}
+
+/* === ESTILOS PARA EL SUBMENÚ DE CATEGORÍAS === */
+
+/* Contenedor del submenú */
+.nav-submenu {
+    list-style: none;
+    padding-left: 20px; /* Sangría para los sub-items */
+    margin: 0;
+    /* Oculto por defecto */
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+}
+
+/* Enlaces del submenú */
+.nav-submenu a {
+    padding: 10px 15px;
+    font-size: 14px;
+    font-weight: 400; /* Menos grueso que el principal */
+}
+
+/* Estilo para la flecha de dropdown */
+.nav-menu a {
+    /* Asegura que haya espacio para la flecha */
+    position: relative;
+}
+
+.dropdown-arrow {
+    font-size: 12px;
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    transition: transform 0.3s ease;
+}
+
+/* Clase que rota la flecha cuando está abierta */
+.dropdown-arrow.rotated {
+    transform: translateY(-50%) rotate(180deg);
+}
+
+/* Estilo para el sub-item activo */
+.nav-submenu a.active-sub {
+    background-color: #e0e0e0; /* Un gris claro */
+    color: var(--color-principal);
+    font-weight: 600;
+    border-radius: 5px;
+}
+
+
+/* === ESTILOS PARA LAS TARJETAS DE TRABAJADOR === */
+
+.worker-grid {
+    display: grid;
+    /* Crea 3 columnas de tarjetas, o menos si no hay espacio */
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 25px;
+    margin-top: 20px;
+}
+
+.worker-card {
+    background-color: #fff;
+    border: 1px solid var(--color-borde);
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    overflow: hidden;
+    text-align: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.worker-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+}
+
+.worker-card-image {
+    width: 100%;
+    height: 220px;
+    object-fit: cover;
+    background-color: #f0f0f0; /* Color de fondo si la imagen falta */
+}
+
+.worker-card-content {
+    padding: 20px;
+}
+
+.worker-card-content h3 {
+    margin: 0 0 5px 0;
+    font-size: 20px;
+    color: var(--color-principal);
+}
+
+.worker-card-content .specialty {
+    font-size: 14px;
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 15px;
+}
+
+.worker-card-content p {
+    font-size: 14px;
+    line-height: 1.5;
+    color: #666;
+    margin-bottom: 20px;
+}
+
+.btn-contact {
+    display: inline-block;
+    background-color: var(--color-principal);
+    color: white;
+    padding: 10px 25px;
+    border-radius: 5px;
+    text-decoration: none;
+    font-weight: 500;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.btn-contact:hover {
+    background-color: #0056d6;
+}
+
+
+/*Tarjetas de consejos*/
+
+
+.accordion-item {
+    /* Reemplaza el estilo antiguo de service-item */
+    background-color: #fff;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 15px;
+}
+
+.accordion-header {
+    display: flex;
+    align-items: center;
+    padding: 10px 0;
+    cursor: pointer; /* Manita al pasar el mouse */
+    transition: background-color 0.2s;
+}
+
+.accordion-header:hover {
+    opacity: 0.8;
+}
+
+.accordion-header .header-text {
+    flex-grow: 1;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-left: 15px;
+    font-weight: bold;
+    color: var(--color-texto);
+    font-size: 15px;
+}
+
+.accordion-header .arrow {
+    transition: transform 0.3s ease;
+    color: #999;
+    font-size: 12px;
+}
+
+/* Cuando el acordeón está abierto, giramos la flecha */
+.accordion-item.active .arrow {
+    transform: rotate(180deg);
+    color: var(--color-principal);
+}
+
+.accordion-content {
+    max-height: 0; /* Oculto por defecto */
+    overflow: hidden;
+    transition: max-height 0.3s ease-out;
+    padding-left: 55px; /* Alineado con el texto del header */
+    padding-right: 10px;
+}
+
+.accordion-content p {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 10px;
+    margin-top: 0;
+}
+
+.accordion-content ul {
+    margin: 0 0 15px 0;
+    padding-left: 20px;
+    font-size: 14px;
+    color: #555;
+}
+
+.accordion-content li {
+    margin-bottom: 5px;
+}
+
+
+/* === ESTILOS PARA MIS SOLICITUDES === */
+
+.request-panel {
+    background-color: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+    margin-bottom: 30px;
+    border-left: 5px solid var(--color-principal);
+}
+
+.jobs-list {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.job-card {
+    background-color: #fff;
+    border: 1px solid var(--color-borde);
+    border-radius: 8px;
+    padding: 20px;
+    transition: transform 0.2s;
+}
+
+.job-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.job-header h4 {
+    margin: 0;
+    font-size: 18px;
+    color: var(--color-texto);
+}
+
+.status-badge {
+    padding: 5px 10px;
+    border-radius: 15px;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.status-badge.pending {
+    background-color: #fff3cd;
+    color: #856404;
+}
+
+.status-badge.completed {
+    background-color: #d4edda;
+    color: #155724;
+}
+
+.job-desc {
+    color: #666;
+    margin-bottom: 15px;
+}
+
+/* Botones de acción */
+.btn-complete {
+    background-color: #28a745; /* Verde */
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-complete:hover {
+    background-color: #218838;
+}
+
+/* Sección de Reseña */
+.hidden {
+    display: none;
+}
+
+.review-section {
+    margin-top: 15px;
+    padding-top: 15px;
+    border-top: 1px dashed #ccc;
+    background-color: var(--color-fondo-resena);
+    padding: 15px;
+    border-radius: 5px;
+}
+
+.star-rating {
+    font-size: 24px;
+    color: #ddd; /* Color estrella apagada */
+    margin-bottom: 10px;
+    cursor: pointer;
+}
+
+.star-rating i:hover,
+.star-rating i.active {
+    color: #ffc107; /* Amarillo estrella */
+}
+
+.review-text {
+    width: 100%;
+    margin-bottom: 10px;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.btn-send-review {
+    background-color: var(--color-principal);
+    color: white;
+    border: none;
+    padding: 8px 15px;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+/* Reseña Finalizada (Estática) */
+.final-review {
+    margin-top: 10px;
+    padding: 10px;
+    background-color: #f9f9f9;
+    border-radius: 5px;
+}
+.final-review .stars-display {
+    color: #ffc107;
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+.final-review .review-content {
+    font-style: italic;
+    font-size: 14px;
+    color: #555;
+    margin: 0;
+}

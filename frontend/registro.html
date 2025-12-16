@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro - Servicios del Hogar</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+    <!-- LEAFLET CSS -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="login.css">
+    <style>
+        #mapa-contenedor {
+            height: 300px;
+            width: 100%;
+            margin-top: 10px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            border: 2px solid #ddd;
+            z-index: 1;
+            cursor: crosshair;
+        }
+        /* Estilo para campos bloqueados (Solo lectura) */
+        .input-readonly {
+            background-color: #e9ecef !important; /* Gris claro */
+            color: #495057;
+            cursor: not-allowed;
+        }
+        /* Estilo para cuando desbloqueamos la colonia */
+        .input-unlocked {
+            background-color: #fff !important;
+            border-color: #28a745 !important; /* Borde verde para indicar que puede escribir */
+            cursor: text;
+        }
+        
+        /* Grid de Oficios (Para cuando actives trabajador) */
+        .oficios-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        .oficio-item {
+            border: 1px solid #ddd; border-radius: 8px; padding: 10px; text-align: center; cursor: pointer; background: #f9f9f9; transition: 0.2s;
+        }
+        .oficio-item:hover { border-color: #0b69ff; background: #eef6ff; }
+        .oficio-item.selected { background-color: #0b69ff; color: white; border-color: #0b69ff; }
+        .oficio-item input { display: none; }
+        .area-mapa { margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+    <div class="login-container">
+        
+        <div id="step-selection" class="login-box">
+            <h2>¿Cómo deseas registrarte?</h2>
+            <p style="color: #666; margin-bottom: 20px;">Selecciona tu tipo de cuenta:</p>
+            
+            <div class="role-options">
+                <!-- CLIENTE -->
+                <div class="role-card" onclick="selectRole('cliente')">
+                    <div class="icon-bg"><i class="fas fa-user"></i></div>
+                    <h3>Cliente</h3>
+                    <p>Busco contratar</p>
+                </div>
+
+                <!-- TRABAJADOR -->
+                <div class="role-card" onclick="selectRole('trabajador')">
+                    <div class="icon-bg"><i class="fas fa-hard-hat"></i></div>
+                    <h3>Trabajador</h3>
+                    <p>Ofrecer servicios</p>
+                </div>
+                
+                <!-- ADMIN ELIMINADO DE AQUÍ -->
+            </div>
+            
+            <div style="margin-top: 25px; font-size: 14px;">
+                ¿Ya tienes cuenta? <a href="login.html" style="color: #0b69ff; text-decoration: none; font-weight: bold;">Inicia Sesión</a>
+            </div>
+        </div>
+
+        <form id="step-form" class="login-box hidden"> 
+            <div class="back-arrow" onclick="goBack()">
+                <i class="fas fa-arrow-left"></i> Volver
+            </div>
+
+            <h2 id="form-title">Crear Cuenta</h2>
+            <input type="hidden" id="rol-input" name="rol" value="cliente">
+            
+            <!-- CAMPOS OCULTOS PARA LA TACHUELA (GPS) -->
+            <input type="hidden" id="latitud" name="latitud">
+            <input type="hidden" id="longitud" name="longitud">
+
+            <!-- DATOS GENERALES -->
+            <div style="display: flex; gap: 10px;">
+                <div class="input-group" style="flex: 1;">
+                    <label>Nombre(s)</label>
+                    <input type="text" id="nombre" required>
+                </div>
+                <div class="input-group" style="flex: 1;">
+                    <label>Apellidos</label>
+                    <input type="text" id="apellidos" required>
+                </div>
+            </div>
+
+            <div class="input-group">
+                <label>Correo Electrónico</label>
+                <input type="email" id="correo_electronico" placeholder="nombre@ejemplo.com" required>
+            </div>
+
+            <div style="display: flex; gap: 10px;">
+                <div class="input-group" style="flex: 1;">
+                    <label>Teléfono</label>
+                    <input type="tel" id="telefono" placeholder="10 dígitos" pattern="[0-9]{10}" required>
+                </div>
+                <div class="input-group" style="flex: 1;">
+                    <label>Fecha Nacimiento</label>
+                    <input type="date" id="fecha_nacimiento" required>
+                </div>
+            </div>
+
+            <!-- ================================================== -->
+            <!-- SECCIÓN CLIENTE -->
+            <!-- ================================================== -->
+            <div id="campos-cliente" class="hidden">
+                <div class="section-divider"></div>
+                <span class="section-title"><i class="fas fa-map-marker-alt"></i> Ubicación del Servicio</span>
+                
+                <button type="button" class="geolocation-btn" onclick="initMapWithGPS()">
+                    <i class="fas fa-crosshairs"></i> Usar mi ubicación (GPS)
+                </button>
+                <small id="status-cliente" style="display:block; margin:5px 0 10px; color:#666;">
+                    Si no tienes GPS, usa el mapa manual arrastrando el pin.
+                </small>
+
+                <!-- AQUÍ "ATERRIZARÁ" EL MAPA CUANDO SEAS CLIENTE -->
+                <div id="contenedor-mapa-cliente" class="area-mapa"></div>
+
+                <div class="input-group"><label>Calle (Automático)</label><input type="text" id="calle" class="client-field input-readonly" readonly placeholder="Mueve el pin para llenar..."></div>
+                <div style="display: flex; gap: 10px;">
+                    <div class="input-group" style="flex: 1;"><label>No. Ext.</label><input type="text" id="numero_exterior" class="client-field" placeholder="#"></div>
+                    <div class="input-group" style="flex: 1;"><label>No. Int.</label><input type="text" id="numero_interior" placeholder="(Opcional)"></div>
+                </div>
+                
+                <!-- COLONIA MANUAL Y OBLIGATORIA -->
+                <div class="input-group"><label>Colonia</label><input type="text" id="colonia" class="client-field" placeholder="Escribe tu colonia manualmente" required></div>
+                
+                <div style="display: flex; gap: 10px;">
+                    <div class="input-group" style="flex: 1;"><label>C.P.</label><input type="text" id="codigo_postal" class="client-field input-readonly" readonly></div>
+                    <div class="input-group" style="flex: 1;"><label>Ciudad</label><input type="text" id="ciudad" class="client-field input-readonly" readonly></div>
+                </div>
+                
+                <div class="input-group" style="margin-top: 15px;">
+                    <label for="referencias_domicilio">Referencias del Domicilio</label>
+                    <textarea id="referencias_domicilio" placeholder="Entre calles, color de casa..." rows="2"></textarea>
+                </div>
+            </div>
+
+            <!-- ================================================== -->
+            <!-- SECCIÓN TRABAJADOR (LISTA PARA ACTIVARSE) -->
+            <!-- ================================================== -->
+            <div id="campos-trabajador" class="hidden">
+                <div class="section-divider"></div>
+                <span class="section-title"><i class="fas fa-briefcase"></i> Perfil Profesional</span>
+
+                <div class="input-group">
+                    <label>Selecciona tus Oficios:</label>
+                    <div id="lista-oficios" class="oficios-grid">Cargando...</div>
+                </div>
+
+                <div style="display: flex; gap: 10px;">
+                    <div class="input-group" style="flex: 1;">
+                        <label>Años Exp.</label><input type="number" id="anios_experiencia" class="worker-field" min="0">
+                    </div>
+                    <div class="input-group" style="flex: 1;">
+                        <label>Tarifa/Hora ($)</label><input type="number" id="tarifa_hora" class="worker-field" min="0">
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label>Descripción (Bio)</label>
+                    <textarea id="descripcion_bio" class="worker-field" placeholder="Soy experto en..." rows="3"></textarea>
+                </div>
+
+                <span class="section-title"><i class="fas fa-map-pin"></i> Zona de Trabajo</span>
+                <p style="font-size:13px; color:#666; margin-bottom:10px;">Marca tu base operativa en el mapa.</p>
+                <button type="button" class="geolocation-btn" onclick="initMapWithGPS()">
+                    <i class="fas fa-crosshairs"></i> Marcar mi base
+                </button>
+                
+                <div id="contenedor-mapa-trabajador" class="area-mapa"></div> 
+            </div>
+
+            <!-- MAPA FLOTANTE -->
+            <div id="mapa-contenedor" style="display:none;"></div>
+
+            <div class="section-divider"></div>
+
+            <div class="input-group">
+                <label>Contraseña</label>
+                <input type="password" id="password" required>
+            </div>
+
+            <div class="input-group">
+                <label>Confirmar</label>
+                <input type="password" id="password-confirm" required>
+            </div>
+            
+            <button type="submit" class="login-button">Registrarse</button>
+        </form>
+    </div>
+
+    <!-- LEAFLET JS -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+    <script>
+        let map = null; let marker = null;
+
+        // --- 1. CARGAR OFICIOS (Solo si es Trabajador) ---
+        async function cargarCategorias() {
+            const contenedor = document.getElementById('lista-oficios');
+            try {
+                const res = await fetch("http://localhost:8080/categorias");
+                const categorias = await res.json();
+                contenedor.innerHTML = ""; 
+                categorias.forEach(cat => {
+                    const div = document.createElement('div');
+                    div.className = 'oficio-item';
+                    div.innerHTML = `<i class="${cat.icono_url}"></i><br>${cat.nombre} <input type="checkbox" value="${cat.id}">`;
+                    div.onclick = () => {
+                        const check = div.querySelector('input');
+                        check.checked = !check.checked;
+                        div.classList.toggle('selected', check.checked);
+                    };
+                    contenedor.appendChild(div);
+                });
+            } catch (e) { console.error(e); contenedor.innerHTML = "<small>Error de conexión</small>"; }
+        }
+
+        // --- 2. INTERFAZ ---
+        function selectRole(role) {
+            document.getElementById('step-selection').classList.add('hidden');
+            document.getElementById('step-form').classList.remove('hidden');
+            document.getElementById('rol-input').value = role;
+            
+            const clientFields = document.getElementById('campos-cliente');
+            const workerFields = document.getElementById('campos-trabajador');
+            const mapa = document.getElementById('mapa-contenedor');
+            mapa.style.display = 'block';
+
+            if (role === 'cliente') {
+                document.getElementById('form-title').innerText = "Registro Cliente";
+                clientFields.classList.remove('hidden');
+                workerFields.classList.add('hidden');
+                document.getElementById('contenedor-mapa-cliente').appendChild(mapa);
+                
+                toggleRequired('.client-field', true);
+                toggleRequired('.worker-field', false);
+            } else {
+                document.getElementById('form-title').innerText = "Registro Trabajador";
+                clientFields.classList.add('hidden');
+                workerFields.classList.remove('hidden');
+                document.getElementById('contenedor-mapa-trabajador').appendChild(mapa);
+                
+                toggleRequired('.client-field', false);
+                toggleRequired('.worker-field', true);
+                cargarCategorias();
+            }
+            
+            setTimeout(() => { 
+                if (map) map.invalidateSize(); 
+                else initMapDefault(); 
+            }, 200);
+        }
+
+        function goBack() {
+            document.getElementById('step-form').classList.add('hidden');
+            document.getElementById('step-selection').classList.remove('hidden');
+        }
+
+        function toggleRequired(selector, isRequired) {
+            document.querySelectorAll(selector).forEach(i => {
+                isRequired ? i.setAttribute('required', 'true') : i.removeAttribute('required');
+            });
+        }
+
+        // --- 3. VALIDACIÓN EDAD ---
+        function validarEdad() {
+            const fechaInput = document.getElementById('fecha_nacimiento').value;
+            if (!fechaInput) return false;
+            const edad = new Date().getFullYear() - new Date(fechaInput).getFullYear();
+            if (edad < 18) { alert("Debes ser mayor de 18 años."); return false; }
+            return true;
+        }
+        document.getElementById('fecha_nacimiento').addEventListener('change', validarEdad);
+
+        // --- 4. MAPA (LÓGICA) ---
+
+        function setMarker(lat, lon) {
+            if (marker) marker.setLatLng([lat, lon]);
+            else {
+                marker = L.marker([lat, lon], {draggable: true}).addTo(map);
+                marker.on('dragend', (e) => updatePos(e.target.getLatLng()));
+            }
+            map.setView([lat, lon], 16);
+            updatePos({lat, lng: lon});
+        }
+
+        function updatePos(pos) {
+            document.getElementById('latitud').value = pos.lat;
+            document.getElementById('longitud').value = pos.lng;
+            // Solo buscamos dirección si es Cliente
+            if (document.getElementById('rol-input').value === 'cliente') {
+                obtenerDireccion(pos.lat, pos.lng);
+            }
+        }
+
+        function initMapDefault() {
+            if (map) return;
+            const defaultLat = 17.80967;
+            const defaultLon = -97.77643;
+            
+            map = L.map('mapa-contenedor').setView([defaultLat, defaultLon], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map);
+            
+            setMarker(defaultLat, defaultLon);
+            // Mensaje dinámico
+            const msg = document.getElementById('rol-input').value === 'cliente' ? "Arrastra el pin a tu casa." : "Marca tu base operativa.";
+            const status = document.getElementById('status-cliente');
+            if(status) status.innerText = msg;
+
+            map.on('click', (e) => setMarker(e.latlng.lat, e.latlng.lng));
+        }
+
+        function initMapWithGPS() {
+            if (!navigator.geolocation) return alert("GPS no soportado.");
+            
+            navigator.geolocation.getCurrentPosition(
+                (pos) => { 
+                    if(!map) initMapDefault(); 
+                    setMarker(pos.coords.latitude, pos.coords.longitude); 
+                },
+                () => { 
+                    alert("Permiso denegado. Usa el mapa manualmente."); 
+                    if(!map) initMapDefault(); 
+                },
+                { enableHighAccuracy: true }
+            );
+        }
+
+        async function obtenerDireccion(lat, lon) {
+            try {
+                document.getElementById('calle').value = "Cargando...";
+                const url = `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lon}`;
+                const response = await fetch(url, { headers: { 'User-Agent': 'TuAppServicios/1.0' } });
+                const data = await response.json();
+                const dir = data.address;
+
+                document.getElementById('calle').value = dir.road || dir.pedestrian || dir.path || "Calle sin nombre";
+                
+                // COLONIA INTELIGENTE (Se desbloquea si no encuentra)
+                const col = dir.neighbourhood || dir.suburb || dir.quarter || "";
+                const inputCol = document.getElementById('colonia');
+                
+                if (col) {
+                    inputCol.value = col;
+                    inputCol.classList.add('input-readonly');
+                    inputCol.classList.remove('input-unlocked');
+                    inputCol.readOnly = true;
+                } else {
+                    inputCol.value = "";
+                    inputCol.placeholder = "No detectada. Escríbela aquí...";
+                    inputCol.classList.remove('input-readonly');
+                    inputCol.classList.add('input-unlocked');
+                    inputCol.readOnly = false;
+                }
+
+                document.getElementById('codigo_postal').value = dir.postcode || "";
+                document.getElementById('ciudad').value = dir.city || dir.town || dir.municipality || "";
+                
+                if(dir.house_number) document.getElementById('numero_exterior').value = dir.house_number;
+
+            } catch(e) {
+                console.error("Error geocoding:", e);
+                document.getElementById('calle').value = "Error al obtener dirección";
+                document.getElementById('colonia').readOnly = false;
+            }
+        }
+
+        // --- 5. ENVÍO ---
+        document.getElementById('step-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!validarEdad()) return;
+
+            const lat = document.getElementById('latitud').value;
+            if (!lat) {
+                alert("⚠️ Por favor usa el mapa para establecer tu ubicación.");
+                return;
+            }
+
+            const rol = document.getElementById('rol-input').value;
+            const pass = document.getElementById('password').value;
+            if (pass !== document.getElementById('password-confirm').value) return alert("Contraseñas no coinciden");
+
+            // Datos Trabajador
+            let oficiosIds = [];
+            if (rol === 'trabajador') {
+                document.querySelectorAll('.oficio-item input:checked').forEach(ch => oficiosIds.push(parseInt(ch.value)));
+                if (oficiosIds.length === 0) return alert("Selecciona al menos un oficio");
+            }
+
+            const base = {
+                nombre: document.getElementById('nombre').value,
+                apellidos: document.getElementById('apellidos').value,
+                correo_electronico: document.getElementById('correo_electronico').value,
+                password: pass,
+                telefono: document.getElementById('telefono').value,
+                fecha_nacimiento: document.getElementById('fecha_nacimiento').value,
+                latitud: document.getElementById('latitud').value,
+                longitud: document.getElementById('longitud').value
+            };
+
+            let url = "", payload = {};
+            
+            if (rol === 'cliente') {
+                url = "http://localhost:8080/registro-cliente";
+                payload = { ...base, 
+                    calle: document.getElementById('calle').value,
+                    colonia: document.getElementById('colonia').value,
+                    numero_exterior: document.getElementById('numero_exterior').value,
+                    numero_interior: document.getElementById('numero_interior').value || null,
+                    codigo_postal: document.getElementById('codigo_postal').value,
+                    ciudad: document.getElementById('ciudad').value,
+                    referencias: document.getElementById('referencias_domicilio').value || null
+                };
+            } else {
+                url = "http://localhost:8080/registro-trabajador";
+                payload = { ...base,
+                    descripcion_bio: document.getElementById('descripcion_bio').value,
+                    anios_experiencia: document.getElementById('anios_experiencia').value,
+                    tarifa_hora: document.getElementById('tarifa_hora').value,
+                    oficios_ids: oficiosIds
+                };
+            }
+
+            try {
+                const res = await fetch(url, { method: "POST", headers: {"Content-Type": "application/json"}, body: JSON.stringify(payload) });
+                const data = await res.json();
+                
+                if (res.ok) {
+                    alert("¡ÉXITO! " + data.mensaje);
+                    window.location.href = "login.html"; 
+                } else {
+                    alert("Error: " + data.detail);
+                }
+            } catch (error) {
+                console.error(error);
+                alert("No se pudo conectar con el servidor.");
+            }
+        });
+    </script>
+</body>
+</html>
