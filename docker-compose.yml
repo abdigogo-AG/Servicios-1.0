@@ -33,7 +33,7 @@ services:
       POSTGRES_URL: "postgresql://${POSTGRES_USER}:${POSTGRES_PASSWORD}@db_postgres:5432/${POSTGRES_DB}"
       
       # URL del Frontend (Local o Nube)
-      FRONTEND_URL: "http://localhost:8080"
+      FRONTEND_URL: "https://servicios-1-0.vercel.app"
       
       # --- STRIPE KEYS (Invisibles) ---
       # Docker las leerá automáticamente de tu archivo .env

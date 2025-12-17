@@ -34,7 +34,7 @@ GOOGLE_API_KEY = os.environ.get("GOOGLE_API_KEY")
 # URL del frontend (usada en las back_urls / success/cancel)
 FRONTEND_URL = os.environ.get("FRONTEND_URL", "http://localhost:8080")
 
-# Verificación de Seguridad para Stripe
+# Verificación de Seguridad pa  ra Stripe
 if not STRIPE_SECRET_KEY:
     print("\n  ADVERTENCIA: No se encontró STRIPE_SECRET_KEY en las variables de entorno.")
     print("  La API arrancará, pero los pagos con Stripe fallarán.\n")
