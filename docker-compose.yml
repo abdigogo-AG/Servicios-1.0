@@ -24,7 +24,7 @@ services:
   api:
     build:
       context: . 
-      dockerfile: Dockerfile
+      dockerfile: dockerfile
     restart: always
     ports:
       - "8080:8080"
