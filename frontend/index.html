@@ -42,6 +42,7 @@
 <body>
 
     <header>
+        <button id="hamburger-btn" aria-label="Abrir menú"><i class="fas fa-bars"></i></button>
         <div class="logo" onclick="window.location.href='index.html'" style="cursor: pointer;">
             <i class="fas fa-home"></i> Homely
         </div>
@@ -103,6 +104,21 @@
     </footer>
 
     <script>
+        // Toggle menú móvil (hamburger)
+        document.addEventListener('DOMContentLoaded', () => {
+            const hb = document.getElementById('hamburger-btn');
+            const nav = document.querySelector('.nav-buttons');
+            if (hb && nav) {
+                hb.addEventListener('click', () => {
+                    nav.classList.toggle('mobile-open');
+                });
+                // Cerrar al hacer click fuera
+                document.addEventListener('click', (e) => {
+                    if (!nav.contains(e.target) && e.target !== hb) nav.classList.remove('mobile-open');
+                });
+            }
+        });
+
         const textos = {
             invitado: {
                 titulo: "Bienvenido a <br> <span>Homely</span>", desc: "La plataforma segura para conectar hogares con expertos.",

@@ -69,6 +69,7 @@
 <body>
 
     <div style="background: white; padding: 15px 5%; display: flex; align-items: center; box-shadow: 0 2px 5px rgba(0,0,0,0.05);">
+        <button id="hamburger-btn" aria-label="Abrir menú" style="display:none; margin-right:10px;"><i class="fas fa-bars"></i></button>
         <div style="font-weight: bold; color: #0b69ff; cursor:pointer; margin-right: 20px;" onclick="window.location.href='index.html'">
             <i class="fas fa-arrow-left"></i> Volver
         </div>
@@ -171,6 +172,27 @@
             </div>
         </form>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const hb = document.getElementById('hamburger-btn');
+            const container = document.querySelector('.container');
+            if (!hb) return;
+
+            const applyVisibility = () => {
+                if (window.innerWidth <= 768) hb.style.display = 'inline-flex';
+                else hb.style.display = 'none';
+            };
+
+            applyVisibility();
+            window.addEventListener('resize', applyVisibility);
+
+            hb.addEventListener('click', () => {
+                // Simplemente hacer scroll hasta el inicio del contenido para simular acción móvil
+                window.scrollTo({ top: container ? container.offsetTop : 0, behavior: 'smooth' });
+            });
+        });
+    </script>
 
     <script>
         const API_URL = "https://servicios-1-0.onrender.com";

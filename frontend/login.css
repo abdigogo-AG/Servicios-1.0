@@ -176,3 +176,21 @@ body {
     color: var(--color-principal, #0b69ff);
     text-decoration: underline;
 }
+
+/* =========================
+   Ajustes responsivos para login/registro
+   ========================= */
+@media (max-width: 480px) {
+    body {
+        align-items: flex-start;
+        padding-top: 40px;
+    }
+
+    .login-box {
+        padding: 1.25rem;
+        max-width: 95%;
+        margin: 0 12px;
+    }
+
+    .role-options { gap: 10px; }
+}

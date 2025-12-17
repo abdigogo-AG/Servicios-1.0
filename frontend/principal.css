@@ -184,3 +184,58 @@ footer { background: #1a1a1a; color: white; text-align: center; padding: 40px 20
     cursor: pointer;
     font-weight: bold;
 }
+
+/* =========================
+   Ajustes responsivos
+   ========================= */
+@media (max-width: 1024px) {
+    header { padding: 15px 4%; }
+    .logo { font-size: 20px; }
+    .nav-buttons { display: flex; gap: 10px; flex-wrap: wrap; justify-content: flex-end; }
+    .btn-registro { padding: 8px 12px; }
+    .hero { padding: 50px 10px; }
+    .hero h1 { font-size: 36px; }
+    .grid-servicios { gap: 18px; }
+}
+
+@media (max-width: 768px) {
+    .hero h1 { font-size: 28px; }
+    .hero p { font-size: 16px; }
+    #chat-window { width: 90vw; right: 5vw; bottom: 80px; height: 60vh; }
+    #floating-button { right: 10px; bottom: 10px; }
+}
+
+@media (max-width: 480px) {
+    .nav-buttons a { margin-left: 8px; font-size: 14px; }
+    .btn-grande { padding: 12px 18px; font-size: 16px; }
+    .grid-servicios { grid-template-columns: 1fr; }
+}
+
+/* HAMBURGER / MOBILE NAV */
+#hamburger-btn {
+    display: none;
+    background: transparent;
+    border: none;
+    font-size: 22px;
+    cursor: pointer;
+    color: var(--color-principal, #0b69ff);
+}
+
+@media (max-width: 768px) {
+    #hamburger-btn { display: inline-flex; align-items: center; justify-content: center; padding: 8px; }
+    .nav-buttons {
+        position: absolute;
+        top: 64px;
+        right: 10px;
+        background: white;
+        box-shadow: 0 6px 20px rgba(0,0,0,0.12);
+        border-radius: 8px;
+        padding: 12px;
+        display: none;
+        flex-direction: column;
+        gap: 8px;
+        z-index: 999;
+    }
+
+    .nav-buttons.mobile-open { display: flex; }
+}

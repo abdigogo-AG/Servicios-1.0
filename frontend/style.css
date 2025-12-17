@@ -832,3 +832,78 @@ section h3 {
     color: #555;
     margin: 0;
 }
+
+/* =========================
+   Reglas responsivas
+   ========================= */
+@media (max-width: 1024px) {
+    /* Colapsa el layout con sidebar en una sola columna */
+    .page-container {
+        grid-template-columns: 1fr;
+    }
+
+    /* Oculta la barra lateral en pantallas medianas/pequeñas */
+    .sidebar {
+        display: none;
+    }
+
+    .main-content {
+        padding: 15px;
+    }
+
+    .main-header {
+        padding: 10px 20px;
+        justify-content: space-between;
+    }
+
+    .services-grid {
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    .bottom-content {
+        flex-direction: column;
+    }
+
+    .service-card img {
+        height: 160px;
+    }
+
+    .profile-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .profile-pic {
+        width: 120px;
+        height: 120px;
+    }
+
+    .profile-info-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .form-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 480px) {
+    .service-card img {
+        height: 120px;
+    }
+
+    .search-bar input {
+        padding-left: 40px;
+    }
+
+    .service-card-content h4 {
+        font-size: 16px;
+    }
+
+    /* Ajustes generales para botones y textos más pequeños */
+    .main-content, .sidebar, .page-container {
+        font-size: 15px;
+    }
+}

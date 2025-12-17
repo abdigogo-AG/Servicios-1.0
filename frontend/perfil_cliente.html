@@ -117,6 +117,7 @@
 
     <!-- HEADER -->
     <div class="top-nav">
+        <button id="hamburger-btn" aria-label="Abrir menú" style="display:none; margin-right:10px;"><i class="fas fa-bars"></i></button>
         <div style="font-weight: bold; color: #0b69ff; font-size: 22px; cursor:pointer;" onclick="window.location.href='index.html'">
             <i class="fas fa-home"></i> Homely
         </div>
@@ -460,6 +461,32 @@
             <p>¡Hola! Soy tu asistente de reparaciones. Pregúntame cómo arreglar algo.</p>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const hb = document.getElementById('hamburger-btn');
+            const sidebar = document.querySelector('.profile-sidebar');
+
+            const applyVisibility = () => {
+                if (window.innerWidth <= 768) {
+                    hb.style.display = 'inline-flex';
+                    // hide sidebar by default on small screens
+                    if (sidebar) sidebar.style.display = 'none';
+                } else {
+                    hb.style.display = 'none';
+                    if (sidebar) sidebar.style.display = 'block';
+                }
+            };
+
+            applyVisibility();
+            window.addEventListener('resize', applyVisibility);
+
+            if (hb) hb.addEventListener('click', () => {
+                if (!sidebar) return;
+                sidebar.style.display = (sidebar.style.display === 'none' || sidebar.style.display === '') ? 'block' : 'none';
+            });
+        });
+    </script>
     
     <div id="chat-input-area">
         <input type="text" id="user-input" placeholder="¿Cómo puedo arreglar x cosa?" onkeypress="handleKeyPress(event)">

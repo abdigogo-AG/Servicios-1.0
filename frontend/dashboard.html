@@ -47,10 +47,11 @@
 <body>
 
     <header>
+        <button id="hamburger-btn" aria-label="Abrir menú" style="margin-right:10px; display:none;"><i class="fas fa-bars"></i></button>
         <div class="logo" style="font-weight: bold; color: #0b69ff; font-size: 22px; cursor:pointer;" onclick="window.location.href='index.html'">
             <i class="fas fa-home"></i> ServiciosApp
         </div>
-        <div style="display: flex; align-items: center; gap: 15px;">
+        <div id="user-nav" style="display: flex; align-items: center; gap: 15px;">
             <span id="user-name" style="color: #555; font-weight: 500;">...</span>
             <button id="btn-mi-perfil" class="btn-accion" style="background: #6c757d; padding: 5px 15px; font-size: 14px;">
                 <i class="fas fa-user"></i> Perfil
@@ -58,6 +59,33 @@
             <button onclick="cerrarSesion()" class="btn-logout"><i class="fas fa-sign-out-alt"></i></button>
         </div>
     </header>
+
+    <script>
+        // Mostrar botón hamburger en pantallas pequeñas y toggling del nav de usuario
+        document.addEventListener('DOMContentLoaded', () => {
+            const hb = document.getElementById('hamburger-btn');
+            const userNav = document.getElementById('user-nav');
+            if (!hb || !userNav) return;
+
+            const applyVisibility = () => {
+                if (window.innerWidth <= 768) {
+                    hb.style.display = 'inline-flex';
+                    userNav.style.display = 'none';
+                } else {
+                    hb.style.display = 'none';
+                    userNav.style.display = 'flex';
+                }
+            };
+
+            applyVisibility();
+            window.addEventListener('resize', applyVisibility);
+
+            hb.addEventListener('click', () => {
+                if (userNav.style.display === 'none') userNav.style.display = 'flex';
+                else userNav.style.display = 'none';
+            });
+        });
+    </script>
 
     <div class="container-dashboard">
         <div class="dashboard-header">
